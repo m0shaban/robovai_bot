@@ -1,6 +1,8 @@
-# RoboVAI Multi-Tenant Chatbot Platform
+# RoboVAI Solutions - شريكك في التحول الرقمي
 
-Modern AI-powered chatbot platform with FastAPI backend and HTMX dashboard. Support for multiple tenants, channels (Telegram, WhatsApp, Meta), and customizable AI responses.
+**[RoboVAI Solutions](https://robovai.blogspot.com/)** is a modern AI-powered chatbot platform designed to automate customer service and drive digital transformation.
+
+> **Created with love ❤️ by Eng. Mohamed Shaban**
 
 ## ✨ Features
 
