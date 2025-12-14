@@ -20,7 +20,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.0"
       - key: CORS_ALLOW_ORIGINS
         value: "*"
       - key: LLM_MODEL
