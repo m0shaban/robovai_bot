@@ -1,7 +1,7 @@
 """Add message_templates table
 
-Revision ID: 0004_message_templates
-Revises: 0003_quick_replies
+Revision ID: 0004
+Revises: 0003
 Create Date: 2024-12-14
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0004_message_templates'
-down_revision = '0003_quick_replies'
+revision = '0004'
+down_revision = '0003'
 branch_labels = None
 depends_on = None
 
