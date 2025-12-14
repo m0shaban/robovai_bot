@@ -4,6 +4,8 @@
 
 **Powered by [RoboVAI Solutions](https://robovai.blogspot.com/) - Your Partner in Digital Transformation**
 
+<a href="https://www.buymeacoffee.com/moshabanai"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=moshabanai&button_colour=5F7FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" /></a>
+
 ---
 
 ![RoboVAI Bot Platform](https://raw.githubusercontent.com/m0shaban/robovai_bot/main/app/static/img/logo.png)
