@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم - RoboVAI{% endblock %}
+{% block content %}
+<div class="space-y-6 fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-50">📊 لوحة التحكم</h1>
+            <p class="text-slate-400 mt-1">نظرة شاملة على أداء البوت</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <select id="tenant_filter" class="select-field text-sm" onchange="filterDashboard()">
+                <option value="">جميع المشاريع</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.id }}" {% if selected_tenant_id == tenant.id %}selected{% endif %}>
+                    {{ tenant.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button onclick="refreshDashboard()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors text-sm">
+                🔄 تحديث
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Total Messages -->
+        <div class="glass-card p-5 hover:scale-105 transition-transform duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">إجمالي الرسائل</p>
+                    <p class="text-3xl font-bold text-slate-50 mt-1">{{ stats.total_messages | default(0) }}</p>
+                    <p class="text-xs text-cyan-400 mt-1">📈 اليوم: {{ stats.today_messages | default(0) }}</p>
+                </div>
+                <div class="text-4xl opacity-50">💬</div>
+            </div>
+        </div>
+
+        <!-- Total Leads -->
+        <div class="glass-card p-5 hover:scale-105 transition-transform duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">العملاء</p>
+                    <p class="text-3xl font-bold text-slate-50 mt-1">{{ stats.total_leads | default(0) }}</p>
+                    <p class="text-xs text-green-400 mt-1">✨ جدد اليوم: {{ stats.today_leads | default(0) }}</p>
+                </div>
+                <div class="text-4xl opacity-50">👥</div>
+            </div>
+        </div>
+
+        <!-- Response Rate -->
+        <div class="glass-card p-5 hover:scale-105 transition-transform duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">معدل الرد</p>
+                    <p class="text-3xl font-bold text-slate-50 mt-1">{{ stats.response_rate | default(0) }}%</p>
+                    <p class="text-xs text-indigo-400 mt-1">🤖 ردود البوت: {{ stats.bot_messages | default(0) }}</p>
+                </div>
+                <div class="text-4xl opacity-50">⚡</div>
+            </div>
+        </div>
+
+        <!-- Weekly Activity -->
+        <div class="glass-card p-5 hover:scale-105 transition-transform duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm">نشاط الأسبوع</p>
+                    <p class="text-3xl font-bold text-slate-50 mt-1">{{ stats.week_messages | default(0) }}</p>
+                    <p class="text-xs text-purple-400 mt-1">📅 عملاء جدد: {{ stats.week_leads | default(0) }}</p>
+                </div>
+                <div class="text-4xl opacity-50">📊</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Activity Row -->
+    <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Messages Chart -->
+        <div class="lg:col-span-2 glass-card p-6">
+            <h3 class="text-lg font-semibold text-slate-50 mb-4">📈 الرسائل خلال آخر 7 أيام</h3>
+            <div class="h-64 flex items-end justify-between gap-2 px-4">
+                {% for day in chart_data %}
+                <div class="flex-1 flex flex-col items-center gap-2">
+                    <div class="w-full bg-gradient-to-t from-cyan-500 to-indigo-500 rounded-t-lg transition-all duration-500 hover:opacity-80"
+                         style="height: {{ (day.count / (max_count if max_count > 0 else 1)) * 180 }}px; min-height: 4px;">
+                    </div>
+                    <span class="text-xs text-slate-400">{{ day.label }}</span>
+                    <span class="text-xs text-cyan-400 font-semibold">{{ day.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="glass-card p-6">
+            <h3 class="text-lg font-semibold text-slate-50 mb-4">⚡ إحصائيات سريعة</h3>
+            <div class="space-y-4">
+                {% if stats.total_tenants is defined %}
+                <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <span class="text-slate-300 flex items-center gap-2">
+                        <span class="text-lg">🏢</span> المشاريع
+                    </span>
+                    <span class="text-cyan-400 font-bold text-lg">{{ stats.total_tenants }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <span class="text-slate-300 flex items-center gap-2">
+                        <span class="text-lg">📡</span> القنوات المتصلة
+                    </span>
+                    <span class="text-indigo-400 font-bold text-lg">{{ stats.total_channels }}</span>
+                </div>
+                {% endif %}
+                <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <span class="text-slate-300 flex items-center gap-2">
+                        <span class="text-lg">👤</span> رسائل العملاء
+                    </span>
+                    <span class="text-green-400 font-bold text-lg">{{ stats.user_messages | default(0) }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <span class="text-slate-300 flex items-center gap-2">
+                        <span class="text-lg">🤖</span> ردود البوت
+                    </span>
+                    <span class="text-purple-400 font-bold text-lg">{{ stats.bot_messages | default(0) }}</span>
+                </div>
+                
+                <!-- Progress Bar for Response Rate -->
+                <div class="pt-2">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-slate-400">كفاءة الرد</span>
+                        <span class="text-cyan-400 font-semibold">{{ stats.response_rate | default(0) }}%</span>
+                    </div>
+                    <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full transition-all duration-1000"
+                             style="width: {{ [stats.response_rate | default(0), 100] | min }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="glass-card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-slate-50">🕐 آخر النشاطات</h3>
+            <a href="/ui/chatlogs" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                عرض الكل ←
+            </a>
+        </div>
+        
+        {% if recent_activity %}
+        <div class="space-y-3">
+            {% for activity in recent_activity %}
+            <div class="flex items-start gap-4 p-3 bg-slate-800/30 rounded-lg hover:bg-slate-800/50 transition-colors">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
+                    {% if activity.sender_type == 'user' %}bg-green-500/20 text-green-400{% else %}bg-cyan-500/20 text-cyan-400{% endif %}">
+                    {% if activity.sender_type == 'user' %}👤{% else %}🤖{% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-medium text-slate-200">{{ activity.customer_name }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full
+                            {% if activity.sender_type == 'user' %}bg-green-500/20 text-green-400{% else %}bg-cyan-500/20 text-cyan-400{% endif %}">
+                            {% if activity.sender_type == 'user' %}عميل{% else %}بوت{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-slate-400 text-sm truncate">{{ activity.message }}</p>
+                </div>
+                <div class="text-xs text-slate-500 whitespace-nowrap">
+                    {{ activity.timestamp.strftime('%H:%M') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-slate-400">
+            <div class="text-4xl mb-3">📭</div>
+            <p>لا توجد نشاطات حتى الآن</p>
+            <p class="text-sm mt-1">ابدأ بربط قناة واستقبال الرسائل</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/ui/tenants" class="glass-card p-4 text-center hover:scale-105 transition-transform duration-300 group">
+            <div class="text-3xl mb-2">🏢</div>
+            <span class="text-slate-300 group-hover:text-cyan-400 transition-colors">إدارة المشاريع</span>
+        </a>
+        <a href="/ui/channels" class="glass-card p-4 text-center hover:scale-105 transition-transform duration-300 group">
+            <div class="text-3xl mb-2">📡</div>
+            <span class="text-slate-300 group-hover:text-cyan-400 transition-colors">ربط القنوات</span>
+        </a>
+        <a href="/ui/test-chat" class="glass-card p-4 text-center hover:scale-105 transition-transform duration-300 group">
+            <div class="text-3xl mb-2">💬</div>
+            <span class="text-slate-300 group-hover:text-cyan-400 transition-colors">اختبار البوت</span>
+        </a>
+        <a href="/ui/widget" class="glass-card p-4 text-center hover:scale-105 transition-transform duration-300 group">
+            <div class="text-3xl mb-2">📦</div>
+            <span class="text-slate-300 group-hover:text-cyan-400 transition-colors">كود الويدجت</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function filterDashboard() {
+    const tenantId = document.getElementById('tenant_filter').value;
+    window.location.href = '/ui/dashboard' + (tenantId ? '?tenant_id=' + tenantId : '');
+}
+
+function refreshDashboard() {
+    window.location.reload();
+}
+</script>
+{% endblock %}

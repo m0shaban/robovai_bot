@@ -46,6 +46,7 @@ from app.crud.scripted_response import (
 )
 from app.crud.lead import list_leads
 from app.crud.chat_log import list_chat_logs_for_tenant
+from app.crud.stats import get_dashboard_stats, get_messages_per_day, get_recent_activity
 
 # Templates directory (app/templates)
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -68,11 +69,43 @@ async def ui_root(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Show onboarding for first-time users, otherwise go to tenants page"""
+    """Show onboarding for first-time users, otherwise go to dashboard"""
     tenants = await list_tenants(session=session)
     if not tenants:
         return templates.TemplateResponse("onboarding.html", {"request": request})
-    return RedirectResponse(url="/ui/tenants", status_code=status.HTTP_302_FOUND)
+    return RedirectResponse(url="/ui/dashboard", status_code=status.HTTP_302_FOUND)
+
+
+# ============ DASHBOARD ============
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(
+    request: Request,
+    tenant_id: int | None = None,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Main dashboard with statistics"""
+    tenants = await list_tenants(session=session)
+    
+    # Get statistics
+    stats = await get_dashboard_stats(session=session, tenant_id=tenant_id)
+    chart_data = await get_messages_per_day(session=session, tenant_id=tenant_id, days=7)
+    recent_activity = await get_recent_activity(session=session, tenant_id=tenant_id, limit=10)
+    
+    # Calculate max for chart scaling
+    max_count = max((d["count"] for d in chart_data), default=1)
+    
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "tenants": tenants,
+            "selected_tenant_id": tenant_id,
+            "stats": stats,
+            "chart_data": chart_data,
+            "max_count": max_count,
+            "recent_activity": recent_activity,
+        },
+    )
 
 
 # ============ TENANTS ============

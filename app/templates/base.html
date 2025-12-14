@@ -54,8 +54,11 @@
             </div>
             
             <nav class="flex flex-wrap gap-2">
+                <a href="/ui/dashboard" class="nav-link {% if '/dashboard' in request.url.path %}active{% endif %}">
+                    <span>📊</span> لوحة التحكم
+                </a>
                 <a href="/ui/tenants" class="nav-link {% if '/tenants' in request.url.path %}active{% endif %}">
-                    <span>👥</span> المشاريع
+                    <span>🏢</span> المشاريع
                 </a>
                 <a href="/ui/channels" class="nav-link {% if '/channels' in request.url.path %}active{% endif %}">
                     <span>📱</span> القنوات
