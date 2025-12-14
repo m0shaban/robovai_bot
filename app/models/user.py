@@ -48,7 +48,7 @@ class User(Base):
     
     # Role & Tenant (nullable for super_admin who has access to all)
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), 
+        Enum(UserRole, native_enum=True, values_callable=lambda obj: [e.value for e in obj]), 
         nullable=False, 
         default=UserRole.AGENT,
         index=True

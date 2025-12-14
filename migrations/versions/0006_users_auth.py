@@ -1,7 +1,7 @@
 """Add users table for SaaS authentication
 
-Revision ID: 0004_users_auth
-Revises: 0003_quick_replies
+Revision ID: 0006_users_auth
+Revises: 0005
 Create Date: 2024-12-14
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '0004_users_auth'
-down_revision: Union[str, None] = '0003_quick_replies'
+revision: str = '0006_users_auth'
+down_revision: Union[str, None] = '0005'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
