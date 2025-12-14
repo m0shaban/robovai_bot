@@ -5,14 +5,12 @@ databases:
     plan: free
 
 services:
-  # FastAPI Backend + HTMX Dashboard
   - type: web
     name: robovai-backend
-    runtime: python
-    region: frankfurt
+    env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -22,23 +20,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11"
       - key: CORS_ALLOW_ORIGINS
         value: "*"
-      - key: LLM_BASE_URL
-        value: https://api.groq.com/openai/v1
       - key: LLM_MODEL
         value: llama-3.1-70b-versatile
       # Add these manually in Render dashboard:
-      # - ADMIN_PASSWORD (for admin operations)
-      # - LLM_API_KEY or GROQ_API_KEY (for AI features)
-    
-    # Run migrations after deploy
-    postDeployCommand: |
-      python -m alembic upgrade head
-
-# Notes:
-# 1. After first deploy, set ADMIN_PASSWORD in Render dashboard
-# 2. Add LLM_API_KEY or GROQ_API_KEY for AI features
-# 3. DATABASE_URL will be auto-configured from robovai-db
-# 4. Access dashboard at: https://<your-app>.onrender.com/ui
+      # - ADMIN_PASSWORD (required for tenant management)
+      # - GROQ_API_KEY (required for AI features)
