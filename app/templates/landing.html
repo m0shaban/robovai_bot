@@ -18,6 +18,41 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        /* Floating Chat Button */
+        .chat-fab {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(34, 211, 238, 0); }
+        }
+        /* Chat window animation */
+        .chat-window {
+            transform-origin: bottom left;
+            animation: chatOpen 0.3s ease-out;
+        }
+        @keyframes chatOpen {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        /* Typing indicator */
+        .typing-dot {
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        /* Message animation */
+        .msg-appear {
+            animation: msgSlide 0.3s ease-out;
+        }
+        @keyframes msgSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-50 min-h-screen flex flex-col relative overflow-x-hidden">
@@ -37,8 +72,10 @@
                     <p class="text-[10px] text-slate-400">Powered by RoboVAI Solutions</p>
                 </div>
             </div>
-            <div class="flex gap-4">
-                <a href="https://robovai.blogspot.com/" target="_blank" class="text-sm text-slate-400 hover:text-cyan-400 transition-colors hidden sm:block">عن الشركة</a>
+            <div class="flex gap-4 items-center">
+                <a href="#demo" class="text-sm text-slate-400 hover:text-cyan-400 transition-colors hidden sm:block">جرّب البوت</a>
+                <a href="#features" class="text-sm text-slate-400 hover:text-cyan-400 transition-colors hidden sm:block">المميزات</a>
+                <a href="#projects" class="text-sm text-slate-400 hover:text-cyan-400 transition-colors hidden sm:block">المشاريع</a>
                 <a href="/ui/login" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105">
                     تسجيل الدخول
                 </a>
@@ -64,86 +101,401 @@
                 <a href="/ui/login" class="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold text-lg hover:bg-slate-100 transition-all hover:scale-105 shadow-xl shadow-white/10">
                     ابدأ الآن مجاناً 🚀
                 </a>
-                <a href="#features" class="px-8 py-4 rounded-2xl bg-slate-800 text-white font-bold text-lg border border-slate-700 hover:bg-slate-700 transition-all">
-                    اكتشف المميزات
+                <a href="#demo" class="px-8 py-4 rounded-2xl bg-slate-800 text-white font-bold text-lg border border-slate-700 hover:bg-slate-700 transition-all">
+                    جرّب البوت الذكي 🤖
                 </a>
             </div>
         </div>
 
-        <!-- Footer -->
-        <footer class="py-12 bg-gradient-to-b from-slate-900/60 to-slate-900/40 backdrop-blur-sm border-t border-slate-800/50">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="grid gap-6 md:grid-cols-3 items-start">
-                    <div class="flex flex-col items-center md:items-start text-center md:text-right">
-                        <div class="flex items-center gap-3">
-                            <img src="/static/img/logo.png" alt="Logo" class="w-12 h-12 rounded-full shadow-md">
-                            <div>
-                                <div class="text-lg font-bold text-slate-100">RoboVAI Bot</div>
-                                <div class="text-xs text-slate-400">منصة الشات بوت الذكي</div>
+        <!-- Features Grid -->
+        <div id="features" class="max-w-7xl mx-auto px-4 py-20">
+            <h2 class="text-3xl font-bold text-center mb-4">مميزات <span class="gradient-text">RoboVAI Bot</span></h2>
+            <p class="text-slate-400 text-center mb-12 max-w-xl mx-auto">كل اللي محتاجه عشان تبني شات بوت احترافي يخدم عملائك 24/7</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                    <h3 class="text-xl font-bold text-white mb-2">ذكاء اصطناعي متطور</h3>
+                    <p class="text-slate-400">يفهم لهجات العملاء ويجيب بدقة باستخدام أحدث نماذج LLM.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">📱</div>
+                    <h3 class="text-xl font-bold text-white mb-2">متعدد القنوات</h3>
+                    <p class="text-slate-400">إدارة مركزية لمحادثات واتساب، تيليجرام، ماسنجر، وإنستجرام.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">📊</div>
+                    <h3 class="text-xl font-bold text-white mb-2">تحليلات وتقارير</h3>
+                    <p class="text-slate-400">لوحة تحكم شاملة لمتابعة الأداء وسلوك العملاء لحظة بلحظة.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">⚡</div>
+                    <h3 class="text-xl font-bold text-white mb-2">ردود سريعة</h3>
+                    <p class="text-slate-400">أزرار تفاعلية وردود جاهزة لتسريع المحادثات وتحسين التجربة.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">📚</div>
+                    <h3 class="text-xl font-bold text-white mb-2">قاعدة معرفة</h3>
+                    <p class="text-slate-400">درّب البوت على منتجاتك وخدماتك عشان يجاوب بدقة أكتر.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">👤</div>
+                    <h3 class="text-xl font-bold text-white mb-2">التقاط العملاء</h3>
+                    <p class="text-slate-400">يجمع بيانات العملاء تلقائياً (اسم، تليفون، إيميل) من المحادثات.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Section -->
+        <div id="demo" class="max-w-7xl mx-auto px-4 py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">جرّب <span class="gradient-text">البوت الذكي</span> دلوقتي! 🤖</h2>
+                <p class="text-slate-400 max-w-xl mx-auto">شوف بنفسك إزاي البوت بيتعامل مع العملاء. جرّب تسأله عن أي حاجة!</p>
+            </div>
+            
+            <!-- Embedded Chat Demo -->
+            <div class="max-w-lg mx-auto">
+                <div class="glass-card rounded-3xl overflow-hidden shadow-2xl shadow-cyan-500/10">
+                    <!-- Chat Header -->
+                    <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 p-4 flex items-center gap-3">
+                        <div class="relative">
+                            <img src="/static/img/logo.png" alt="Bot" class="w-12 h-12 rounded-full border-2 border-white/30">
+                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-white font-bold">RoboVAI Assistant</h3>
+                            <p class="text-cyan-100 text-xs">🟢 متصل الآن • يرد في ثواني</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <span class="w-2 h-2 bg-white/50 rounded-full"></span>
+                            <span class="w-2 h-2 bg-white/50 rounded-full"></span>
+                            <span class="w-2 h-2 bg-white/50 rounded-full"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="h-80 overflow-y-auto p-4 space-y-4 bg-slate-800/30">
+                        <!-- Welcome message -->
+                        <div class="flex gap-3 msg-appear">
+                            <img src="/static/img/logo.png" alt="Bot" class="w-8 h-8 rounded-full">
+                            <div class="bg-slate-700/50 rounded-2xl rounded-tr-sm p-3 max-w-[80%]">
+                                <p class="text-slate-200 text-sm">أهلاً بيك! 👋 أنا RoboVAI، مساعدك الذكي.</p>
+                                <p class="text-slate-200 text-sm mt-1">إزاي أقدر أساعدك النهارده؟</p>
                             </div>
                         </div>
-                        <p class="text-sm text-slate-400 max-w-xs mt-3">نحسن تجربة عملائك بأدوات ذكية، تحليل، وإدارة قنوات متعددة بسهولة.</p>
-                    </div>
-
-                    <div class="flex flex-col items-center">
-                        <div class="flex gap-4 text-sm text-slate-300 mb-3">
-                            <a href="/ui/login" class="hover:text-cyan-400 transition-colors">تسجيل الدخول</a>
-                            <span class="text-slate-600">•</span>
-                            <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات</a>
-                            <span class="text-slate-600">•</span>
-                            <a href="#" class="hover:text-cyan-400 transition-colors">سياسة الخصوصية</a>
+                        <!-- Quick replies -->
+                        <div id="quickReplies" class="flex flex-wrap gap-2 justify-end">
+                            <button onclick="sendQuickReply('إيه مميزات RoboVAI؟')" class="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 rounded-full text-xs hover:bg-cyan-500/30 transition-colors">
+                                إيه مميزات RoboVAI؟ ✨
+                            </button>
+                            <button onclick="sendQuickReply('إزاي أبدأ؟')" class="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 rounded-full text-xs hover:bg-cyan-500/30 transition-colors">
+                                إزاي أبدأ؟ 🚀
+                            </button>
+                            <button onclick="sendQuickReply('الأسعار كام؟')" class="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 rounded-full text-xs hover:bg-cyan-500/30 transition-colors">
+                                الأسعار كام؟ 💰
+                            </button>
+                            <button onclick="sendQuickReply('عايز أكلم حد')" class="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 rounded-full text-xs hover:bg-cyan-500/30 transition-colors">
+                                عايز أكلم حد 📞
+                            </button>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <a href="https://github.com/m0shaban/robovai_bot" target="_blank" class="p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors" aria-label="GitHub">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-slate-200"><path d="M12 .5C5.7.5.9 5.3.9 11.6c0 4.7 3 8.7 7.2 10.1.5.1.7-.2.7-.5v-1.8c-2.9.6-3.4-1.3-3.4-1.3-.4-1.1-1-1.4-1-1.4-.8-.6.1-.6.1-.6.9.1 1.4.9 1.4.9.8 1.4 2.1 1 2.6.8.1-.6.3-1 .6-1.3-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.8 0 0 .8-.2 2.8 1 .8-.2 1.7-.3 2.6-.3s1.8.1 2.6.3c2-.1 2.8-1 2.8-1 .5 1.5.2 2.5.1 2.8.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.7 5 .3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5 4.2-1.4 7.2-5.4 7.2-10.1C23.1 5.3 18.3.5 12 .5z"/></svg>
-                            </a>
-                        </div>
                     </div>
-
-                    <div class="flex flex-col items-center md:items-end text-center md:text-right">
-                        <div class="inline-block bg-slate-800/40 p-4 rounded-2xl">
-                            <p class="text-sm text-slate-200 font-semibold">لو عجبتك RoboVAI، ادعمنا بفنجان قهوة ☕️ وساعدنا نطلق مزايا جديدة أسرع! 🚀</p>
-                            <div class="mt-3">
-                                <a href="https://www.buymeacoffee.com/moshabanai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg hover:scale-[1.02] transition-transform">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white"><path d="M18 8h1a3 3 0 0 1 0 6h-1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8h12v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    Buy me a coffee
-                                </a>
-                            </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="p-4 border-t border-slate-700/50 bg-slate-800/50">
+                        <div class="flex gap-2">
+                            <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا..." 
+                                   class="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                                   onkeypress="if(event.key==='Enter')sendMessage()">
+                            <button onclick="sendMessage()" class="px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-8 border-t border-slate-800/40 pt-6 text-center text-xs text-slate-500">
-                    تم التطوير بكل حب ❤️ بواسطة <a href="https://robovai.blogspot.com/" class="text-indigo-400 font-medium hover:text-indigo-300">المهندس محمد شعبان</a>
+                
+                <!-- CTA below demo -->
+                <div class="text-center mt-8">
+                    <p class="text-slate-400 mb-4">عجبك البوت؟ ابدأ دلوقتي واعمل واحد زيه لمشروعك! 🎉</p>
+                    <a href="/ui/login" class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-2xl text-white font-bold text-lg hover:shadow-xl hover:shadow-cyan-500/25 transition-all hover:scale-105">
+                        <span>ابدأ مجاناً</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
                 </div>
             </div>
-        </footer>
-            <div class="flex items-center justify-center gap-4 text-sm text-slate-400">
-                <a href="https://robovai.blogspot.com/" target="_blank" class="hover:text-cyan-400 transition-colors">RoboVAI Solutions</a>
-                <span>•</span>
-                <a href="#" class="hover:text-cyan-400 transition-colors">سياسة الخصوصية</a>
-                <span>•</span>
-                <a href="#" class="hover:text-cyan-400 transition-colors">شروط الاستخدام</a>
+        </div>
+
+        <!-- Projects/Use Cases Section -->
+        <div id="projects" class="max-w-7xl mx-auto px-4 py-20">
+            <h2 class="text-3xl font-bold text-center mb-4">مشاريع <span class="gradient-text">ناجحة</span></h2>
+            <p class="text-slate-400 text-center mb-12 max-w-xl mx-auto">شوف إزاي RoboVAI بيساعد الشركات في مجالات مختلفة</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card p-6 rounded-2xl text-center hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 flex items-center justify-center text-3xl">🛒</div>
+                    <h3 class="font-bold text-white mb-2">متاجر إلكترونية</h3>
+                    <p class="text-slate-400 text-sm">رد على استفسارات المنتجات، تتبع الطلبات، ودعم العملاء 24/7</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center text-3xl">🏥</div>
+                    <h3 class="font-bold text-white mb-2">عيادات وصحة</h3>
+                    <p class="text-slate-400 text-sm">حجز مواعيد، الرد على الأسئلة الشائعة، وتذكير المرضى</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center text-3xl">🏠</div>
+                    <h3 class="font-bold text-white mb-2">عقارات</h3>
+                    <p class="text-slate-400 text-sm">عرض العقارات، تأهيل العملاء، وحجز معاينات تلقائياً</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-3xl">🎓</div>
+                    <h3 class="font-bold text-white mb-2">تعليم وتدريب</h3>
+                    <p class="text-slate-400 text-sm">الرد على استفسارات الطلاب، التسجيل، ومتابعة الدورات</p>
+                </div>
             </div>
-            <p class="text-xs text-slate-500 pt-4 border-t border-slate-800/50 w-full max-w-md mx-auto">
-                تم التطوير بكل حب ❤️ بواسطة <span class="text-indigo-400 font-medium">المهندس محمد شعبان</span>
-            </p>
-            <div class="flex items-center justify-center mt-4">
-                <a href="https://www.buymeacoffee.com/moshabanai" target="_blank" rel="noopener noreferrer">
-                    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=moshabanai&button_colour=5F7FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" alt="Buy me a coffee" class="h-10 mx-auto" />
-                </a>
-            </div>
-                    <div class="text-center mb-2 max-w-md">
-                        <p class="text-sm text-slate-200 font-semibold">لو عجبتك RoboVAI، ادعمنا بفنجان قهوة ☕️ وساعدنا نطلق مزايا جديدة أسرع! 🚀</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-gradient-to-b from-slate-900/60 to-slate-900/40 backdrop-blur-sm border-t border-slate-800/50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid gap-6 md:grid-cols-3 items-start">
+                <div class="flex flex-col items-center md:items-start text-center md:text-right">
+                    <div class="flex items-center gap-3">
+                        <img src="/static/img/logo.png" alt="Logo" class="w-12 h-12 rounded-full shadow-md">
+                        <div>
+                            <div class="text-lg font-bold text-slate-100">RoboVAI Bot</div>
+                            <div class="text-xs text-slate-400">منصة الشات بوت الذكي</div>
+                        </div>
                     </div>
-                <div class="flex flex-col items-center justify-center mt-4">
-                    <div>
-                        <a href="https://www.buymeacoffee.com/moshabanai" target="_blank" rel="noopener noreferrer">
-                            <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=moshabanai&button_colour=5F7FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" alt="Buy me a coffee" class="h-10 mx-auto" />
+                    <p class="text-sm text-slate-400 max-w-xs mt-3">نحسن تجربة عملائك بأدوات ذكية، تحليل، وإدارة قنوات متعددة بسهولة.</p>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="flex gap-4 text-sm text-slate-300 mb-3">
+                        <a href="/ui/login" class="hover:text-cyan-400 transition-colors">تسجيل الدخول</a>
+                        <span class="text-slate-600">•</span>
+                        <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات</a>
+                        <span class="text-slate-600">•</span>
+                        <a href="#demo" class="hover:text-cyan-400 transition-colors">جرّب البوت</a>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="https://github.com/m0shaban/robovai_bot" target="_blank" class="p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors" aria-label="GitHub">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-slate-200"><path d="M12 .5C5.7.5.9 5.3.9 11.6c0 4.7 3 8.7 7.2 10.1.5.1.7-.2.7-.5v-1.8c-2.9.6-3.4-1.3-3.4-1.3-.4-1.1-1-1.4-1-1.4-.8-.6.1-.6.1-.6.9.1 1.4.9 1.4.9.8 1.4 2.1 1 2.6.8.1-.6.3-1 .6-1.3-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.8 0 0 .8-.2 2.8 1 .8-.2 1.7-.3 2.6-.3s1.8.1 2.6.3c2-.1 2.8-1 2.8-1 .5 1.5.2 2.5.1 2.8.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.7 5 .3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5 4.2-1.4 7.2-5.4 7.2-10.1C23.1 5.3 18.3.5 12 .5z"/></svg>
+                        </a>
+                        <a href="https://wa.me/201121891913" target="_blank" class="p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors" aria-label="WhatsApp">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-slate-200"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                         </a>
                     </div>
                 </div>
+
+                <div class="flex flex-col items-center md:items-end text-center md:text-right">
+                    <div class="inline-block bg-slate-800/40 p-4 rounded-2xl">
+                        <p class="text-sm text-slate-200 font-semibold">لو عجبتك RoboVAI، ادعمنا بفنجان قهوة ☕️</p>
+                        <p class="text-xs text-slate-400 mt-1">دعمك بيساعدنا نضيف مزايا جديدة أسرع! 🚀</p>
+                        <div class="mt-3">
+                            <a href="https://www.buymeacoffee.com/moshabanai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg hover:scale-[1.02] transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white"><path d="M18 8h1a3 3 0 0 1 0 6h-1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8h12v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                Buy me a coffee
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 border-t border-slate-800/40 pt-6 text-center text-xs text-slate-500">
+                تم التطوير بكل حب ❤️ بواسطة <a href="https://robovai.blogspot.com/" class="text-indigo-400 font-medium hover:text-indigo-300">المهندس محمد شعبان</a>
+            </div>
         </div>
     </footer>
+
+    <!-- Floating Chat Button -->
+    <button onclick="toggleFloatingChat()" id="floatingChatBtn" class="fixed bottom-6 left-6 w-16 h-16 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full shadow-xl shadow-cyan-500/30 flex items-center justify-center z-50 chat-fab hover:scale-110 transition-transform">
+        <svg id="chatIcon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <svg id="closeIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </button>
+
+    <!-- Floating Chat Window -->
+    <div id="floatingChatWindow" class="hidden fixed bottom-24 left-6 w-80 sm:w-96 z-50">
+        <div class="glass-card rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/20 chat-window">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 p-3 flex items-center gap-3">
+                <img src="/static/img/logo.png" alt="Bot" class="w-10 h-10 rounded-full border-2 border-white/30">
+                <div class="flex-1">
+                    <h3 class="text-white font-bold text-sm">RoboVAI Assistant</h3>
+                    <p class="text-cyan-100 text-[10px]">🟢 متصل • جرّب البوت!</p>
+                </div>
+            </div>
+            <!-- Messages -->
+            <div id="floatingChatMessages" class="h-64 overflow-y-auto p-3 space-y-3 bg-slate-800/50">
+                <div class="flex gap-2">
+                    <img src="/static/img/logo.png" alt="Bot" class="w-6 h-6 rounded-full">
+                    <div class="bg-slate-700/50 rounded-xl rounded-tr-sm p-2 max-w-[85%]">
+                        <p class="text-slate-200 text-xs">أهلاً! 👋 جرّب تسألني أي حاجة عن RoboVAI</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Input -->
+            <div class="p-3 border-t border-slate-700/50 bg-slate-800/30">
+                <div class="flex gap-2">
+                    <input type="text" id="floatingChatInput" placeholder="اكتب رسالتك..." 
+                           class="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+                           onkeypress="if(event.key==='Enter')sendFloatingMessage()">
+                    <button onclick="sendFloatingMessage()" class="px-3 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bot responses database
+        const botResponses = {
+            'مميزات': `RoboVAI عنده مميزات كتير جداً! 🚀\n\n✅ ذكاء اصطناعي متطور (LLM)\n✅ دعم واتساب، تيليجرام، ماسنجر\n✅ ردود سريعة وأزرار تفاعلية\n✅ قاعدة معرفة للتدريب\n✅ التقاط بيانات العملاء\n✅ تحليلات ولوحة تحكم`,
+            'أبدأ': `البداية سهلة جداً! 🎉\n\n1️⃣ سجّل دخولك من الزرار فوق\n2️⃣ أنشئ مشروع جديد\n3️⃣ ربط قناة (واتساب/تيليجرام)\n4️⃣ درّب البوت على منتجاتك\n\nوخلاص! البوت هيبدأ يرد على العملاء 🤖`,
+            'سعر': `RoboVAI مجاني للتجربة! 🎁\n\nتقدر تجرب كل المميزات. لو عجبك وعايز خطة أكبر، تواصل معانا على واتساب:\n📱 wa.me/201121891913`,
+            'أكلم': `طبعاً! تقدر تتواصل معانا:\n\n📱 واتساب: wa.me/201121891913\n📧 إيميل: contact.robovai@gmail.com\n\nفريقنا هيرد عليك في أقرب وقت! 💬`,
+            'default': `شكراً على رسالتك! 😊\n\nأنا بوت تجريبي عشان تشوف إزاي RoboVAI بيشتغل. جرّب تسألني عن:\n\n• مميزات المنصة\n• إزاي تبدأ\n• الأسعار\n• التواصل مع الفريق`
+        };
+
+        function getBotResponse(message) {
+            const msg = message.toLowerCase();
+            if (msg.includes('مميز') || msg.includes('feature')) return botResponses['مميزات'];
+            if (msg.includes('أبدأ') || msg.includes('ابدا') || msg.includes('start') || msg.includes('بداية')) return botResponses['أبدأ'];
+            if (msg.includes('سعر') || msg.includes('price') || msg.includes('كام') || msg.includes('تكلفة')) return botResponses['سعر'];
+            if (msg.includes('أكلم') || msg.includes('اكلم') || msg.includes('تواصل') || msg.includes('contact')) return botResponses['أكلم'];
+            return botResponses['default'];
+        }
+
+        function addMessage(container, message, isUser = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex gap-3 msg-appear ${isUser ? 'justify-end' : ''}`;
+            
+            if (isUser) {
+                msgDiv.innerHTML = `
+                    <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-2xl rounded-tl-sm p-3 max-w-[80%]">
+                        <p class="text-white text-sm">${message}</p>
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <img src="/static/img/logo.png" alt="Bot" class="w-8 h-8 rounded-full">
+                    <div class="bg-slate-700/50 rounded-2xl rounded-tr-sm p-3 max-w-[80%]">
+                        <p class="text-slate-200 text-sm whitespace-pre-line">${message}</p>
+                    </div>
+                `;
+            }
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addTypingIndicator(container) {
+            const typing = document.createElement('div');
+            typing.id = 'typingIndicator';
+            typing.className = 'flex gap-3 msg-appear';
+            typing.innerHTML = `
+                <img src="/static/img/logo.png" alt="Bot" class="w-8 h-8 rounded-full">
+                <div class="bg-slate-700/50 rounded-2xl p-3 flex gap-1">
+                    <span class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></span>
+                    <span class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></span>
+                    <span class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></span>
+                </div>
+            `;
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        // Main chat demo
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const container = document.getElementById('chatMessages');
+            document.getElementById('quickReplies').style.display = 'none';
+            
+            addMessage(container, message, true);
+            input.value = '';
+            
+            addTypingIndicator(container);
+            
+            setTimeout(() => {
+                removeTypingIndicator();
+                addMessage(container, getBotResponse(message));
+            }, 1000 + Math.random() * 500);
+        }
+
+        function sendQuickReply(message) {
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        // Floating chat
+        function toggleFloatingChat() {
+            const window = document.getElementById('floatingChatWindow');
+            const chatIcon = document.getElementById('chatIcon');
+            const closeIcon = document.getElementById('closeIcon');
+            
+            window.classList.toggle('hidden');
+            chatIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+
+        function sendFloatingMessage() {
+            const input = document.getElementById('floatingChatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const container = document.getElementById('floatingChatMessages');
+            
+            // User message (smaller for floating)
+            const userMsg = document.createElement('div');
+            userMsg.className = 'flex gap-2 justify-end msg-appear';
+            userMsg.innerHTML = `
+                <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl rounded-tl-sm p-2 max-w-[85%]">
+                    <p class="text-white text-xs">${message}</p>
+                </div>
+            `;
+            container.appendChild(userMsg);
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            
+            // Typing
+            const typing = document.createElement('div');
+            typing.id = 'floatingTyping';
+            typing.className = 'flex gap-2 msg-appear';
+            typing.innerHTML = `
+                <img src="/static/img/logo.png" alt="Bot" class="w-6 h-6 rounded-full">
+                <div class="bg-slate-700/50 rounded-xl p-2 flex gap-1">
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full typing-dot"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full typing-dot"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full typing-dot"></span>
+                </div>
+            `;
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+            
+            setTimeout(() => {
+                typing.remove();
+                const botMsg = document.createElement('div');
+                botMsg.className = 'flex gap-2 msg-appear';
+                botMsg.innerHTML = `
+                    <img src="/static/img/logo.png" alt="Bot" class="w-6 h-6 rounded-full">
+                    <div class="bg-slate-700/50 rounded-xl rounded-tr-sm p-2 max-w-[85%]">
+                        <p class="text-slate-200 text-xs whitespace-pre-line">${getBotResponse(message)}</p>
+                    </div>
+                `;
+                container.appendChild(botMsg);
+                container.scrollTop = container.scrollHeight;
+            }, 800 + Math.random() * 400);
+        }
+    </script>
 </body>
 </html>
