@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import (
@@ -30,6 +31,8 @@ from app.services.telegram_service import send_telegram_message
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
+logger = logging.getLogger(__name__)
+
 
 @router.post("/telegram/{verify_token}")
 async def telegram_webhook(
@@ -48,7 +51,22 @@ async def telegram_webhook(
             status_code=status.HTTP_404_NOT_FOUND, detail="Integration not found"
         )
 
-    payload: dict[str, Any] = await request.json()
+    try:
+        payload: dict[str, Any] = await request.json()
+    except Exception:
+        payload = {}
+
+    # Helpful diagnostics to confirm Telegram is hitting the webhook.
+    try:
+        update_id = payload.get("update_id")
+        logger.info(
+            "Telegram webhook hit (tenant_id=%s, integ_id=%s, update_id=%s)",
+            getattr(integ, "tenant_id", None),
+            getattr(integ, "id", None),
+            update_id,
+        )
+    except Exception:
+        pass
 
     message = payload.get("message") or {}
     text = message.get("text")
@@ -99,7 +117,8 @@ async def meta_verify(
     integ = await get_integration_by_verify_token(
         session=session,
         verify_token=token,
-        channel_types=["whatsapp", "messenger", "instagram"],
+        # Back-compat: older UI saved Messenger as 'meta'
+        channel_types=["whatsapp", "messenger", "meta", "instagram"],
     )
 
     if integ is None or not integ.is_active:
@@ -220,6 +239,13 @@ async def meta_webhook(
                 channel_type=channel_type,
                 external_id=str(page_or_ig_id),
             )
+            if integ is None and channel_type == "messenger":
+                # Back-compat for integrations stored as 'meta'
+                integ = await get_integration_by_type_and_external_id(
+                    session=session,
+                    channel_type="meta",
+                    external_id=str(page_or_ig_id),
+                )
             if integ is None or not integ.is_active:
                 continue
 

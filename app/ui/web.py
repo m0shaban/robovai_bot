@@ -309,7 +309,11 @@ async def channels_rows(
             "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return jinja_templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
+    base_url = str(request.base_url).rstrip('/')
+    return jinja_templates.TemplateResponse(
+        "_channel_rows.html",
+        {"request": request, "channels": channels, "tenant": tenant, "base_url": base_url},
+    )
 
 
 @router.post("/channels", response_class=HTMLResponse)
