@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="card p-4 rounded-xl md:col-span-2">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <div class="text-sm text-slate-400">Quick Replies</div>
+        <div class="text-xl font-semibold text-slate-50">Predefined Quick Replies</div>
+      </div>
+      <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
+              onclick="loadReplies()">
+        Refresh
+      </button>
+    </div>
+    <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-3 text-sm text-slate-300">
+      <strong>💡 Tip:</strong> Quick replies appear as buttons in chat. Great for common actions like "Talk to agent" or "View pricing".
+    </div>
+    <div id="reply-rows">
+      <p class="text-sm text-slate-400">Enter Tenant API Key and click Load.</p>
+    </div>
+  </div>
+
+  <div class="card p-4 rounded-xl space-y-3">
+    <div>
+      <label class="text-sm text-slate-300">Tenant API Key</label>
+      <input id="tenant_api_key" type="password" placeholder="Required"
+             class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+    </div>
+
+    <form onsubmit="event.preventDefault(); createReply();" class="space-y-2">
+      <div>
+        <label class="text-sm text-slate-300">Title</label>
+        <input id="title" required placeholder="Button text"
+               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+      </div>
+      <div>
+        <label class="text-sm text-slate-300">Payload Text</label>
+        <textarea id="payload_text" required rows="2" placeholder="Message sent when clicked"
+                  class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm"></textarea>
+      </div>
+      <div>
+        <label class="text-sm text-slate-300">Sort Order</label>
+        <input id="sort_order" type="number" value="0"
+               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+      </div>
+      <button type="submit"
+              class="w-full mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
+        + Add Quick Reply
+      </button>
+    </form>
+
+    <button onclick="loadReplies()"
+            class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
+      Load Replies
+    </button>
+  </div>
+</div>
+
+<script>
+function loadReplies() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  if (!apiKey) { alert('Enter Tenant API Key'); return; }
+  htmx.ajax('GET', '/ui/quick-replies/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#reply-rows'});
+}
+function createReply() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  const title = document.getElementById('title').value;
+  const payload = document.getElementById('payload_text').value;
+  const sort = document.getElementById('sort_order').value;
+  if (!apiKey || !title || !payload) { alert('Fill required fields'); return; }
+  const formData = new URLSearchParams({
+    tenant_api_key: apiKey,
+    title: title,
+    payload_text: payload,
+    sort_order: sort,
+    is_active: 'true'
+  });
+  htmx.ajax('POST', '/ui/quick-replies', {target: '#reply-rows', swap: 'innerHTML', values: formData});
+}
+</script>
+{% endblock %}

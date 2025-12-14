@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to RoboVAI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Welcome Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-100 mb-4">🤖 Welcome to RoboVAI!</h1>
+        <p class="text-xl text-gray-400">Your Multi-Channel AI Chatbot Platform</p>
+    </div>
+
+    <!-- Quick Setup Steps -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-100 mb-6">📋 Quick Setup Guide</h2>
+        
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Create Your First Tenant</h3>
+                    <p class="text-gray-400 mb-2">Tenants are separate workspaces for different projects or clients. Each tenant gets its own API key.</p>
+                    <a href="/ui/tenants" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Go to Tenants Page →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Connect Your Channels</h3>
+                    <p class="text-gray-400 mb-2">Integrate Telegram, WhatsApp, or Meta Messenger to receive messages.</p>
+                    <ul class="list-disc list-inside text-gray-400 space-y-1 mb-2">
+                        <li><strong>Telegram:</strong> Get bot token from @BotFather</li>
+                        <li><strong>WhatsApp:</strong> Configure Meta Business API</li>
+                        <li><strong>Messenger:</strong> Create Facebook App and webhook</li>
+                    </ul>
+                    <p class="text-sm text-gray-500">Note: You'll need your tenant API key from Step 1</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Customize Your Bot</h3>
+                    <p class="text-gray-400 mb-2">Make your bot smarter with quick replies, rules, and custom prompts:</p>
+                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                        <li><strong>Quick Replies:</strong> Add menu buttons for common questions</li>
+                        <li><strong>Rules:</strong> Create keyword-triggered automatic responses</li>
+                        <li><strong>Settings:</strong> Configure AI personality and webhooks</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">4</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Monitor & Manage</h3>
+                    <p class="text-gray-400">Track conversations and leads from the dashboard:</p>
+                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                        <li><strong>Chat Logs:</strong> View conversation history</li>
+                        <li><strong>Leads:</strong> See captured customer information</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg p-6 text-center">
+            <div class="text-4xl mb-3">🤖</div>
+            <h3 class="text-lg font-semibold text-gray-100 mb-2">AI-Powered</h3>
+            <p class="text-gray-400 text-sm">Multiple LLM support: Groq, OpenAI, Azure, Anthropic</p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-6 text-center">
+            <div class="text-4xl mb-3">📱</div>
+            <h3 class="text-lg font-semibold text-gray-100 mb-2">Multi-Channel</h3>
+            <p class="text-gray-400 text-sm">Telegram, WhatsApp, Messenger - all in one platform</p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-6 text-center">
+            <div class="text-4xl mb-3">⚡</div>
+            <h3 class="text-lg font-semibold text-gray-100 mb-2">Fast & Modern</h3>
+            <p class="text-gray-400 text-sm">Built with FastAPI + HTMX for blazing speed</p>
+        </div>
+    </div>
+
+    <!-- Help Resources -->
+    <div class="bg-gray-800 rounded-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-100 mb-4">📚 Need Help?</h2>
+        <div class="space-y-2 text-gray-400">
+            <p>📖 <a href="/docs" class="text-blue-400 hover:underline">API Documentation</a> - Interactive API explorer</p>
+            <p>💬 <strong>Support:</strong> Check the docs folder or open a GitHub issue</p>
+            <p>🚀 <strong>Ready to Deploy?</strong> See <code class="bg-gray-700 px-2 py-1 rounded text-sm">docs/DEPLOY_RENDER.md</code></p>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-8">
+        <a href="/ui/tenants" class="inline-block px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition shadow-lg">
+            Get Started - Create Your First Tenant
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% if error %}
+<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700">{{ error }}</div>
+{% else %}
+<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
+  <thead class="bg-slate-900 text-slate-400">
+    <tr>
+      <th class="px-3 py-2 text-left">ID</th>
+      <th class="px-3 py-2 text-left">Lead ID</th>
+      <th class="px-3 py-2 text-left">Sender</th>
+      <th class="px-3 py-2 text-left">Message</th>
+      <th class="px-3 py-2 text-left">Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for log in logs %}
+    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
+      <td class="px-3 py-2">{{ log.id }}</td>
+      <td class="px-3 py-2">{{ log.lead_id }}</td>
+      <td class="px-3 py-2">
+        {% if log.sender_type == 'customer' %}
+        <span class="text-xs px-2 py-1 rounded bg-blue-700 text-white">Customer</span>
+        {% else %}
+        <span class="text-xs px-2 py-1 rounded bg-emerald-700 text-white">Bot</span>
+        {% endif %}
+      </td>
+      <td class="px-3 py-2 text-xs truncate max-w-md">{{ log.message }}</td>
+      <td class="px-3 py-2 text-xs">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else "—" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">No chat logs yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}

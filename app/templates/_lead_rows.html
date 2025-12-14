@@ -1,0 +1,28 @@
+{% if error %}
+<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700">{{ error }}</div>
+{% else %}
+<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
+  <thead class="bg-slate-900 text-slate-400">
+    <tr>
+      <th class="px-3 py-2 text-left">ID</th>
+      <th class="px-3 py-2 text-left">Customer</th>
+      <th class="px-3 py-2 text-left">Phone</th>
+      <th class="px-3 py-2 text-left">Summary</th>
+      <th class="px-3 py-2 text-left">Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in leads %}
+    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
+      <td class="px-3 py-2">{{ l.id }}</td>
+      <td class="px-3 py-2 font-semibold">{{ l.customer_name or "—" }}</td>
+      <td class="px-3 py-2">{{ l.phone_number or "—" }}</td>
+      <td class="px-3 py-2 text-xs truncate max-w-xs">{{ l.summary or "—" }}</td>
+      <td class="px-3 py-2 text-xs">{{ l.created_at.strftime('%Y-%m-%d %H:%M') if l.created_at else "—" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">No leads yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}

@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: robovai-db
+    environment:
+      POSTGRES_DB: robovai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d robovai"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: robovai-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/robovai
+      # LLM settings (optional)
+      LLM_BASE_URL: https://api.groq.com/openai/v1
+      LLM_API_KEY: ""
+      LLM_MODEL: llama-3.1-70b-versatile
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: robovai-dashboard
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "8501:8501"
+    command:
+      - streamlit
+      - run
+      - dashboard_app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+
+volumes:
+  db_data:

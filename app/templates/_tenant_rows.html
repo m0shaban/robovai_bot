@@ -1,0 +1,50 @@
+<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
+  <thead class="bg-slate-900 text-slate-400">
+    <tr>
+      <th class="px-3 py-2 text-left">ID</th>
+      <th class="px-3 py-2 text-left">Name</th>
+      <th class="px-3 py-2 text-left">API Key</th>
+      <th class="px-3 py-2 text-left">Webhook</th>
+      <th class="px-3 py-2 text-left">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tenants %}
+    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
+      <td class="px-3 py-2 align-top">{{ t.id }}</td>
+      <td class="px-3 py-2 align-top">
+        <div class="font-semibold text-slate-100">{{ t.name }}</div>
+        {% if t.system_prompt %}<div class="text-xs text-slate-400 truncate max-w-xs">Prompt: {{ t.system_prompt }}</div>{% endif %}
+      </td>
+      <td class="px-3 py-2 align-top">
+        <div class="flex items-center gap-2">
+          <div class="text-xs font-mono bg-slate-900 px-2 py-1 rounded border border-slate-700">{{ t.api_key }}</div>
+          <button onclick="navigator.clipboard.writeText('{{ t.api_key }}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋', 1000)" 
+                  class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700" title="Copy API Key">📋</button>
+        </div>
+      </td>
+      <td class="px-3 py-2 align-top text-xs text-slate-300 truncate max-w-xs">{{ t.webhook_url or "—" }}</td>
+      <td class="px-3 py-2 align-top space-y-1">
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button class="px-2 py-1 rounded bg-slate-800 border border-slate-700"
+                  hx-post="/ui/tenants/{{ t.id }}/rotate" hx-target="#tenant-rows" hx-swap="outerHTML" hx-include="#admin_password">
+            Rotate Key
+          </button>
+          <button class="px-2 py-1 rounded bg-slate-800 border border-slate-700"
+                  hx-post="/ui/tenants/{{ t.id }}/update" hx-target="#tenant-rows" hx-swap="outerHTML" hx-include="#admin_password"
+                  hx-vals='{"name": "{{ t.name }}"}'>
+            Update Name
+          </button>
+          <button class="px-2 py-1 rounded bg-rose-700 text-white"
+                  hx-post="/ui/tenants/{{ t.id }}/delete" hx-target="#tenant-rows" hx-swap="outerHTML" hx-include="#admin_password"
+                  hx-confirm="Delete tenant {{ t.name }}?">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">No tenants yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

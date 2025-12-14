@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoboVAI Admin</title>
+    <!-- Tailwind via CDN (for simplicity/no build) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX for partial updates -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+      body { background: #0f172a; color: #e2e8f0; }
+      .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+      .nav-link { @apply px-3 py-2 rounded-lg text-sm transition; }
+      .nav-link:hover { @apply bg-slate-800; }
+      .nav-link.active { @apply bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500"></div>
+                    <div>
+                        <div class="text-lg font-semibold text-slate-50">RoboVAI Admin</div>
+                        <div class="text-xs text-slate-400">FastAPI + HTMX Dashboard</div>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400">Admin Panel</div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex flex-wrap gap-2 text-slate-200">
+                <a href="/ui/tenants" class="nav-link" title="Manage tenants and API keys">👥 Tenants</a>
+                <a href="/ui/channels" class="nav-link" title="Configure Telegram, WhatsApp, Meta integrations">📱 Channels</a>
+                <a href="/ui/quick-replies" class="nav-link" title="Create quick reply buttons">⚡ Quick Replies</a>
+                <a href="/ui/rules" class="nav-link" title="Define keyword-triggered responses">📋 Rules</a>
+                <a href="/ui/leads" class="nav-link" title="View collected customer leads">👤 Leads</a>
+                <a href="/ui/chatlogs" class="nav-link" title="Browse conversation history">💬 Chat Logs</a>
+                <a href="/ui/settings" class="nav-link" title="Configure system prompt and webhooks">⚙️ Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

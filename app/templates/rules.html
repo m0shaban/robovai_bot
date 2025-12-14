@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="card p-4 rounded-xl md:col-span-2">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <div class="text-sm text-slate-400">Rules</div>
+        <div class="text-xl font-semibold text-slate-50">Scripted Responses</div>
+      </div>
+      <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
+              onclick="loadRules()">
+        Refresh
+      </button>
+    </div>
+    <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-3 text-sm text-slate-300">
+      <strong>💡 Tip:</strong> Rules provide instant answers for keywords like "pricing" or "hours" before AI engagement.
+    </div>
+    <div id="rule-rows">
+      <p class="text-sm text-slate-400">Enter Tenant API Key and click Load.</p>
+    </div>
+  </div>
+
+  <div class="card p-4 rounded-xl space-y-3">
+    <div>
+      <label class="text-sm text-slate-300">Tenant API Key</label>
+      <input id="tenant_api_key" type="password" placeholder="Required"
+             class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+    </div>
+
+    <form onsubmit="event.preventDefault(); createRule();" class="space-y-2">
+      <div>
+        <label class="text-sm text-slate-300">Trigger Keyword</label>
+        <input id="trigger_keyword" required placeholder="e.g. pricing, hours"
+               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+      </div>
+      <div>
+        <label class="text-sm text-slate-300">Response Text</label>
+        <textarea id="response_text" required rows="3" placeholder="Bot reply when keyword is matched"
+                  class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm"></textarea>
+      </div>
+      <button type="submit"
+              class="w-full mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
+        + Add Rule
+      </button>
+    </form>
+
+    <button onclick="loadRules()"
+            class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
+      Load Rules
+    </button>
+  </div>
+</div>
+
+<script>
+function loadRules() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  if (!apiKey) { alert('Enter Tenant API Key'); return; }
+  htmx.ajax('GET', '/ui/rules/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#rule-rows'});
+}
+function createRule() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  const keyword = document.getElementById('trigger_keyword').value;
+  const response = document.getElementById('response_text').value;
+  if (!apiKey || !keyword || !response) { alert('Fill required fields'); return; }
+  const formData = new URLSearchParams({
+    tenant_api_key: apiKey,
+    trigger_keyword: keyword,
+    response_text: response,
+    is_active: 'true'
+  });
+  htmx.ajax('POST', '/ui/rules', {target: '#rule-rows', swap: 'innerHTML', values: formData});
+}
+</script>
+{% endblock %}

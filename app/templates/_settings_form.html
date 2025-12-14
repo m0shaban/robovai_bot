@@ -1,0 +1,34 @@
+{% if error %}
+<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700 mb-3">{{ error }}</div>
+{% elif success %}
+<div class="text-sm text-emerald-400 p-3 bg-emerald-900/20 rounded border border-emerald-700 mb-3">{{ success }}</div>
+{% endif %}
+
+{% if tenant %}
+<form onsubmit="event.preventDefault(); saveSettings();" class="space-y-3">
+  <div>
+    <label class="text-sm text-slate-300">Tenant Name</label>
+    <div class="text-sm font-semibold text-slate-100 mt-1">{{ tenant.name }}</div>
+  </div>
+
+  <div>
+    <label class="text-sm text-slate-300">System Prompt</label>
+    <textarea id="system_prompt" rows="6" placeholder="AI system prompt (optional)"
+              class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm">{{ tenant.system_prompt or "" }}</textarea>
+    <p class="text-xs text-slate-400 mt-1">Instructions for the AI assistant behavior.</p>
+  </div>
+
+  <div>
+    <label class="text-sm text-slate-300">Webhook URL</label>
+    <input id="webhook_url" type="url" placeholder="https://your-webhook.com/endpoint"
+           value="{{ tenant.webhook_url or '' }}"
+           class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+    <p class="text-xs text-slate-400 mt-1">Optional webhook to receive lead/chat events.</p>
+  </div>
+
+  <button type="submit"
+          class="w-full px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
+    Save Settings
+  </button>
+</form>
+{% endif %}

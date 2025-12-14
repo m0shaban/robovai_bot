@@ -1,0 +1,52 @@
+{% if error %}
+<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700">{{ error }}</div>
+{% else %}
+<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
+  <thead class="bg-slate-900 text-slate-400">
+    <tr>
+      <th class="px-3 py-2 text-left">ID</th>
+      <th class="px-3 py-2 text-left">Type</th>
+      <th class="px-3 py-2 text-left">External ID</th>
+      <th class="px-3 py-2 text-left">Verify Token</th>
+      <th class="px-3 py-2 text-left">Active</th>
+      <th class="px-3 py-2 text-left">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in channels %}
+    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
+      <td class="px-3 py-2">{{ c.id }}</td>
+      <td class="px-3 py-2 font-semibold">{{ c.channel_type }}</td>
+      <td class="px-3 py-2 text-xs">{{ c.external_id or "—" }}</td>
+      <td class="px-3 py-2">
+        <div class="text-xs font-mono bg-slate-900 px-2 py-1 rounded border border-slate-700 inline-block">{{ c.verify_token }}</div>
+      </td>
+      <td class="px-3 py-2">
+        {% if c.is_active %}
+        <span class="text-xs px-2 py-1 rounded bg-emerald-700 text-white">Active</span>
+        {% else %}
+        <span class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">Inactive</span>
+        {% endif %}
+      </td>
+      <td class="px-3 py-2">
+        <button class="px-2 py-1 text-xs rounded bg-rose-700 text-white"
+                onclick="deleteChannel({{ c.id }})">
+          Delete
+        </button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="px-3 py-4 text-center text-slate-400">No channels yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function deleteChannel(id) {
+  if (!confirm('Delete this channel?')) return;
+  const apiKey = document.getElementById('tenant_api_key').value;
+  const formData = new URLSearchParams({tenant_api_key: apiKey});
+  htmx.ajax('POST', '/ui/channels/' + id + '/delete', {target: '#channel-rows', swap: 'innerHTML', values: formData});
+}
+</script>
+{% endif %}

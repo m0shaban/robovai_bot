@@ -1,0 +1,50 @@
+{% if error %}
+<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700">{{ error }}</div>
+{% else %}
+<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
+  <thead class="bg-slate-900 text-slate-400">
+    <tr>
+      <th class="px-3 py-2 text-left">ID</th>
+      <th class="px-3 py-2 text-left">Title</th>
+      <th class="px-3 py-2 text-left">Payload</th>
+      <th class="px-3 py-2 text-left">Sort</th>
+      <th class="px-3 py-2 text-left">Active</th>
+      <th class="px-3 py-2 text-left">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in replies %}
+    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
+      <td class="px-3 py-2">{{ r.id }}</td>
+      <td class="px-3 py-2 font-semibold">{{ r.title }}</td>
+      <td class="px-3 py-2 text-xs truncate max-w-xs">{{ r.payload_text }}</td>
+      <td class="px-3 py-2">{{ r.sort_order }}</td>
+      <td class="px-3 py-2">
+        {% if r.is_active %}
+        <span class="text-xs px-2 py-1 rounded bg-emerald-700 text-white">Active</span>
+        {% else %}
+        <span class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">Inactive</span>
+        {% endif %}
+      </td>
+      <td class="px-3 py-2">
+        <button class="px-2 py-1 text-xs rounded bg-rose-700 text-white"
+                onclick="deleteReply({{ r.id }})">
+          Delete
+        </button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="px-3 py-4 text-center text-slate-400">No quick replies yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function deleteReply(id) {
+  if (!confirm('Delete this quick reply?')) return;
+  const apiKey = document.getElementById('tenant_api_key').value;
+  const formData = new URLSearchParams({tenant_api_key: apiKey});
+  htmx.ajax('POST', '/ui/quick-replies/' + id + '/delete', {target: '#reply-rows', swap: 'innerHTML', values: formData});
+}
+</script>
+{% endif %}

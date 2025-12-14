@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-4 rounded-xl max-w-2xl mx-auto">
+  <div class="mb-4">
+    <div class="text-sm text-slate-400">Settings</div>
+    <div class="text-xl font-semibold text-slate-50">Tenant Configuration</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="text-sm text-slate-300">Tenant API Key</label>
+    <input id="tenant_api_key" type="password" placeholder="Enter your tenant API key"
+           class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+    <button onclick="loadSettings()"
+            class="mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
+      Load Settings
+    </button>
+  </div>
+
+  <div id="settings-form">
+    <p class="text-sm text-slate-400">Enter Tenant API Key and click Load to view/edit settings.</p>
+  </div>
+</div>
+
+<script>
+function loadSettings() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  if (!apiKey) { alert('Enter Tenant API Key'); return; }
+  htmx.ajax('GET', '/ui/settings/data?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#settings-form'});
+}
+function saveSettings() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  const systemPrompt = document.getElementById('system_prompt').value;
+  const webhookUrl = document.getElementById('webhook_url').value;
+  if (!apiKey) { alert('Enter Tenant API Key'); return; }
+  const formData = new URLSearchParams({
+    tenant_api_key: apiKey,
+    system_prompt: systemPrompt,
+    webhook_url: webhookUrl
+  });
+  htmx.ajax('POST', '/ui/settings/update', {target: '#settings-form', swap: 'innerHTML', values: formData});
+}
+</script>
+{% endblock %}

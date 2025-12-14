@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-4 rounded-xl">
+  <div class="flex items-center justify-between mb-3">
+    <div>
+      <div class="text-sm text-slate-400">Chat Logs</div>
+      <div class="text-xl font-semibold text-slate-50">Conversation History</div>
+    </div>
+    <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
+            onclick="loadLogs()">
+      Refresh
+    </button>
+  </div>
+
+  <div class="mb-3">
+    <label class="text-sm text-slate-300">Tenant API Key</label>
+    <input id="tenant_api_key" type="password" placeholder="Required to load logs"
+           class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+    <button onclick="loadLogs()"
+            class="mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
+      Load Chat Logs
+    </button>
+  </div>
+
+  <div id="log-rows">
+    <p class="text-sm text-slate-400">Enter Tenant API Key and click Load.</p>
+  </div>
+</div>
+
+<script>
+function loadLogs() {
+  const apiKey = document.getElementById('tenant_api_key').value;
+  if (!apiKey) { alert('Enter Tenant API Key'); return; }
+  htmx.ajax('GET', '/ui/chatlogs/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#log-rows'});
+}
+</script>
+{% endblock %}
