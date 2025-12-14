@@ -91,6 +91,10 @@ jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 public_router = APIRouter(prefix="/ui", tags=["ui"])
 
+@public_router.get("/welcome", response_class=HTMLResponse)
+async def welcome_page(request: Request):
+    return jinja_templates.TemplateResponse("landing.html", {"request": request})
+
 @public_router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return jinja_templates.TemplateResponse("login.html", {"request": request})

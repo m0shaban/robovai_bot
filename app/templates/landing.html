@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoboVAI Bot - منصة الشات بوت الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #22d3ee, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-50 min-h-screen flex flex-col relative overflow-x-hidden">
+    <!-- Background Effects -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-500 flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/20">
+                    🤖
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gradient-text">RoboVAI Bot</h1>
+                    <p class="text-[10px] text-slate-400">Powered by RoboVAI Solutions</p>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <a href="https://robovai.blogspot.com/" target="_blank" class="text-sm text-slate-400 hover:text-cyan-400 transition-colors hidden sm:block">عن الشركة</a>
+                <a href="/ui/login" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105">
+                    تسجيل الدخول
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 py-20 text-center">
+            <div class="inline-block px-4 py-1.5 rounded-full bg-slate-800/50 border border-slate-700 text-cyan-400 text-sm mb-6 animate-pulse">
+                ✨ الجيل الجديد من خدمة العملاء
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                أتمتة خدمة العملاء <br>
+                <span class="gradient-text">بالذكاء الاصطناعي</span>
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+                منصة متكاملة لإنشاء وإدارة شات بوت ذكي يعمل على واتساب، تيليجرام، وفيسبوك.
+                زد مبيعاتك وحسن تجربة عملائك 24/7.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="/ui/login" class="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold text-lg hover:bg-slate-100 transition-all hover:scale-105 shadow-xl shadow-white/10">
+                    ابدأ الآن مجاناً 🚀
+                </a>
+                <a href="#features" class="px-8 py-4 rounded-2xl bg-slate-800 text-white font-bold text-lg border border-slate-700 hover:bg-slate-700 transition-all">
+                    اكتشف المميزات
+                </a>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div id="features" class="max-w-7xl mx-auto px-4 py-20">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
+                    <div class="text-4xl mb-4">🧠</div>
+                    <h3 class="text-xl font-bold text-white mb-2">ذكاء اصطناعي متطور</h3>
+                    <p class="text-slate-400">يفهم لهجات العملاء ويجيب بدقة باستخدام أحدث نماذج LLM.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
+                    <div class="text-4xl mb-4">📱</div>
+                    <h3 class="text-xl font-bold text-white mb-2">متعدد القنوات</h3>
+                    <p class="text-slate-400">إدارة مركزية لمحادثات واتساب، تيليجرام، ماسنجر، وإنستجرام.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-xl font-bold text-white mb-2">تحليلات وتقارير</h3>
+                    <p class="text-slate-400">لوحة تحكم شاملة لمتابعة الأداء وسلوك العملاء لحظة بلحظة.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-sm py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
+            <div class="flex items-center justify-center gap-2 text-2xl font-bold text-slate-200 mb-4">
+                <span>🤖</span> RoboVAI Bot
+            </div>
+            <div class="flex items-center justify-center gap-4 text-sm text-slate-400">
+                <a href="https://robovai.blogspot.com/" target="_blank" class="hover:text-cyan-400 transition-colors">RoboVAI Solutions</a>
+                <span>•</span>
+                <a href="#" class="hover:text-cyan-400 transition-colors">سياسة الخصوصية</a>
+                <span>•</span>
+                <a href="#" class="hover:text-cyan-400 transition-colors">شروط الاستخدام</a>
+            </div>
+            <p class="text-xs text-slate-500 pt-4 border-t border-slate-800/50 w-full max-w-md mx-auto">
+                تم التطوير بكل حب ❤️ بواسطة <span class="text-indigo-400 font-medium">المهندس محمد شعبان</span>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

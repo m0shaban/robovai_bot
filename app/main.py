@@ -36,11 +36,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="RoboVAI Multi-Tenant Chatbot", lifespan=lifespan)
 
-# Root redirect to UI
+# Root redirect to UI Landing Page
 from fastapi.responses import RedirectResponse
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="/ui")
+    return RedirectResponse(url="/ui/welcome")
 
 origins = _parse_cors_origins(settings.cors_allow_origins)
 
