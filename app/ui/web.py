@@ -100,12 +100,17 @@ async def tenants_rows(
 @router.post("/tenants", response_class=HTMLResponse)
 async def create_tenant_web(
     request: Request,
-    name: str,
-    admin_password: str = "",
-    system_prompt: str | None = None,
-    webhook_url: str | None = None,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    name = form.get("name", "").strip()
+    admin_password = form.get("admin_password", "")
+    system_prompt = form.get("system_prompt") or None
+    webhook_url = form.get("webhook_url") or None
+    
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    
     _require_admin_password(admin_password)
     api_key = secrets.token_urlsafe(32)
     await create_tenant(
@@ -126,9 +131,10 @@ async def create_tenant_web(
 async def rotate_tenant_key(
     request: Request,
     tenant_id: int,
-    admin_password: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    admin_password = form.get("admin_password", "")
     _require_admin_password(admin_password)
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant_id)
     if not tenant:
@@ -144,10 +150,15 @@ async def rotate_tenant_key(
 async def update_tenant_web(
     request: Request,
     tenant_id: int,
-    admin_password: str = "",
-    name: str | None = None,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    name = form.get("name", "").strip()
+    admin_password = form.get("admin_password", "")
+    
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    
     _require_admin_password(admin_password)
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant_id)
     if not tenant:
@@ -163,9 +174,10 @@ async def update_tenant_web(
 async def delete_tenant_web(
     request: Request,
     tenant_id: int,
-    admin_password: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    admin_password = form.get("admin_password", "")
     _require_admin_password(admin_password)
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant_id)
     if not tenant:
