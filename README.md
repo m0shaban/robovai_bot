@@ -1,117 +1,91 @@
-# RoboVAI Bot Platform
+# RoboVAI Bot Platform 🦅
+
+**The Ultimate AI-Powered Customer Engagement Solution**
 
 **Powered by [RoboVAI Solutions](https://robovai.blogspot.com/) - Your Partner in Digital Transformation**
 
-**RoboVAI Bot** is a modern AI-powered chatbot platform designed to automate customer service and drive digital transformation. It is one of the flagship products of RoboVAI Solutions.
+---
 
-> **Created with love ❤️ by Eng. Mohamed Shaban**
+![RoboVAI Bot Platform](https://raw.githubusercontent.com/m0shaban/robovai_bot/main/app/static/img/logo.png)
 
-## ✨ Features
+## 🚀 Overview
 
-- 🤖 **AI-Powered**: Groq/OpenAI/Azure/Anthropic support
-- 👥 **Multi-Tenant**: Isolated data per tenant
-- 📱 **Multi-Channel**: Telegram, WhatsApp, Meta integrations
-- ⚡ **Quick Replies**: Pre-defined button responses
-- 📋 **Smart Rules**: Keyword-triggered instant answers
-- 💬 **Chat Logs**: Full conversation history
-- 👤 **Lead Capture**: Automatic customer lead extraction
-- 🎨 **Modern UI**: HTMX + Tailwind dashboard
-- 🚀 **Easy Deploy**: Single service on Render
+**RoboVAI Bot** is an enterprise-grade, multi-tenant chatbot platform designed to revolutionize how businesses interact with their customers. By leveraging state-of-the-art Artificial Intelligence (LLMs), it automates customer support, sales, and lead generation across multiple channels simultaneously.
 
-## 🎯 Quick Start (Local)
-## 🎯 Quick Start (Local)
+Whether you are a small business looking to be available 24/7 or a large enterprise needing to scale customer operations, RoboVAI Bot provides the intelligence and tools you need.
 
-### 1. Prerequisites
-- Python 3.11+
-- PostgreSQL database
-- Virtual environment
+> **"Transforming conversations into conversions."**
 
-### 2. Installation
-```bash
-# Clone and navigate to repo
-cd ROBOVAI-BOT
+---
 
-# Create virtual environment
-python -m venv .venv
+## 💎 Why RoboVAI Bot?
 
-# Activate (Windows)
-.venv\Scripts\Activate.ps1
+### 🧠 Advanced AI Intelligence
+Unlike traditional chatbots that follow rigid scripts, RoboVAI Bot understands context, nuance, and intent. It engages in natural, human-like conversations, handling complex queries with ease.
 
-# Install dependencies
-pip install -r requirements.txt
-```
+### 🌐 Omni-Channel Presence
+Manage all your customer interactions from a single dashboard. Connect seamlessly with:
+*   **WhatsApp**
+*   **Telegram**
+*   **Facebook Messenger**
+*   **Instagram Direct**
+*   **Web Widget** (Embeddable on any website)
 
-### 3. Configuration
-Copy `.env.example` to `.env` and configure:
-```env
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/robovai
-SECRET_KEY=your-secret-key-here
-ADMIN_PASSWORD=your-admin-password
-GROQ_API_KEY=your-groq-api-key
-LLM_MODEL=llama-3.1-70b-versatile
-CORS_ALLOW_ORIGINS=*
-```
+### ⚡ 24/7 Availability
+Never miss a lead. Your AI agent works round the clock, answering inquiries, scheduling appointments, and collecting customer data while your team sleeps.
 
-### 4. Database Setup
-```bash
-# Run migrations
-alembic upgrade head
-```
+### 📈 Data-Driven Insights
+Gain deep visibility into your customer interactions with our comprehensive analytics dashboard. Track response rates, lead generation stats, and conversation quality.
 
-### 5. Start Platform
-```bash
-# Easy way (recommended)
-python start.py
+---
 
-# Or manually
-python -m uvicorn app.main:app --reload
-```
+## ✨ Key Features
 
-### 6. Access Dashboard
-- **Dashboard**: http://localhost:8000/ui
-- **API Docs**: http://localhost:8000/docs
-- **Health**: http://localhost:8000/health
+| Feature | Description |
+| :--- | :--- |
+| **Visual Flow Builder** | Design complex conversation flows with a drag-and-drop interface. No coding required. |
+| **Multi-Tenant Architecture** | Perfect for agencies. Manage multiple clients (tenants) from a single installation with complete data isolation. |
+| **Smart Lead Capture** | Automatically identifies and extracts customer details (Name, Phone, Email) during conversations. |
+| **Hybrid Response System** | Combine AI freedom with controlled "Scripted Responses" and "Quick Replies" for precise information delivery. |
+| **Knowledge Base** | Train your bot on your specific business documents and policies for accurate answers. |
+| **Live Chat Handover** | Seamlessly transfer conversations from AI to human agents when complex intervention is needed. |
+| **Broadcast Campaigns** | Send bulk messages and marketing campaigns to your customer base on WhatsApp and Telegram. |
 
-## 📱 Dashboard Pages
+---
 
-| Page | Description |
-|------|-------------|
-| 👥 **Tenants** | Manage tenants and API keys (admin only) |
-| 📱 **Channels** | Configure Telegram/WhatsApp/Meta integrations |
-| ⚡ **Quick Replies** | Create quick reply buttons |
-| 📋 **Rules** | Define keyword-triggered responses |
-| 👤 **Leads** | View captured customer leads |
-| 💬 **Chat Logs** | Browse conversation history |
-| ⚙️ **Settings** | Configure system prompt and webhooks |
+## 🎯 Use Cases
 
-## 🚀 Deploy to Render
+*   **E-Commerce**: Automate order tracking, product recommendations, and FAQs.
+*   **Healthcare**: Appointment scheduling and patient triage.
+*   **Real Estate**: Lead qualification and property showcasing.
+*   **Education**: Student support and course information.
+*   **Customer Support**: Instant resolution of common issues, reducing ticket volume by up to 80%.
 
-### Option 1: Automated (render.yaml)
-1. Push code to GitHub
-2. In Render: New → Blueprint → Connect repo
-3. Add environment variables: `ADMIN_PASSWORD`, `GROQ_API_KEY`
-4. Deploy! 🎉
+---
 
-### Option 2: Manual
-See [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) for detailed steps.
+## 🔒 License & Legal Notice
 
-## 📚 Documentation
+**© 2024-2025 RoboVAI Solutions. All Rights Reserved.**
 
-- [HTMX Dashboard Guide](docs/HTMX_DASHBOARD_GUIDE.md) - Complete UI walkthrough
-- [Render Deployment](docs/DEPLOY_RENDER.md) - Production deployment guide
+This software, "RoboVAI Bot Platform", including its source code, design, architecture, and associated documentation, is the **proprietary and confidential property** of **RoboVAI Solutions** and **Eng. Mohamed Shaban**.
 
-## 🔧 Tech Stack
+### ⛔ Restrictions:
+*   **No Unauthorized Use**: You may not use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software without explicit written permission from the owner.
+*   **No Reverse Engineering**: You may not reverse engineer, decompile, or disassemble the Software.
+*   **Commercial Use**: This software is available for commercial licensing only. Any unauthorized commercial use is strictly prohibited and will be subject to legal action.
 
-- **Backend**: FastAPI + SQLAlchemy (async)
-- **Database**: PostgreSQL
-- **Frontend**: HTMX + Tailwind CSS (no build)
-- **AI**: Groq/OpenAI/Azure/Anthropic
-- **Deployment**: Render (single service)
+For licensing inquiries, partnership opportunities, or to request a demo, please contact us.
 
-## 🤝 Contributing
+---
 
-Contributions welcome! Open issues or submit PRs.
+## 📞 Contact Us
 
-## 📄 License
+Ready to transform your business?
 
-MIT License - see LICENSE file for details.
+*   **Website**: [RoboVAI Solutions](https://robovai.blogspot.com/)
+*   **Email**: contact.robovai@gmail.com
+*   **WhatsApp**: [+20 112 189 1913](https://wa.me/201121891913)
+*   **Developer**: **Eng. Mohamed Shaban**
+
+---
+*Built with passion for the future of AI.* ❤️
