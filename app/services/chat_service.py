@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import logging
 from dataclasses import dataclass
 
 import httpx
@@ -9,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.crud.scripted_response import list_active_scripted_responses
 from app.crud.tenant import get_tenant_by_id
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -56,8 +59,8 @@ class ChatManager:
     ) -> str:
         llm_key = settings.effective_llm_api_key()
         if not llm_key:
-            # Fails safe (no secret configured) but keeps endpoint responsive.
-            return "AI is not configured for this tenant yet."
+            logger.warning("No LLM API key configured")
+            return "⚠️ الذكاء الاصطناعي غير مُعد. يرجى إضافة GROQ_API_KEY أو LLM_API_KEY في إعدادات البيئة."
 
         payload = {
             "model": settings.llm_model,
@@ -66,18 +69,39 @@ class ChatManager:
                 {"role": "user", "content": user_message},
             ],
             "temperature": 0.3,
+            "max_tokens": 1024,
         }
 
-        headers = {"Authorization": f"Bearer {llm_key}"}
-
-        async with httpx.AsyncClient(
-            base_url=settings.llm_base_url, timeout=30.0
-        ) as client:
-            resp = await client.post("/chat/completions", json=payload, headers=headers)
-            resp.raise_for_status()
-            data = resp.json()
+        headers = {
+            "Authorization": f"Bearer {llm_key}",
+            "Content-Type": "application/json",
+        }
 
         try:
+            async with httpx.AsyncClient(
+                base_url=settings.llm_base_url, timeout=30.0
+            ) as client:
+                logger.info(f"Calling LLM at {settings.llm_base_url} with model {settings.llm_model}")
+                resp = await client.post("/chat/completions", json=payload, headers=headers)
+                resp.raise_for_status()
+                data = resp.json()
+
             return data["choices"][0]["message"]["content"]
-        except Exception:
-            return "Sorry, I had trouble generating a response."
+        
+        except httpx.HTTPStatusError as e:
+            logger.error(f"LLM API error: {e.response.status_code} - {e.response.text}")
+            if e.response.status_code == 401:
+                return "⚠️ مفتاح API غير صالح. يرجى التحقق من إعدادات الذكاء الاصطناعي."
+            elif e.response.status_code == 429:
+                return "⚠️ تم تجاوز حد الطلبات. يرجى المحاولة لاحقاً."
+            elif e.response.status_code == 503:
+                return "⚠️ خدمة الذكاء الاصطناعي غير متاحة حالياً."
+            return f"⚠️ خطأ من خدمة AI: {e.response.status_code}"
+        
+        except httpx.TimeoutException:
+            logger.error("LLM API timeout")
+            return "⚠️ انتهت مهلة الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى."
+        
+        except Exception as e:
+            logger.exception(f"Unexpected LLM error: {e}")
+            return "⚠️ حدث خطأ غير متوقع. يرجى المحاولة لاحقاً."

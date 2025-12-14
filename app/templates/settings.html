@@ -1,62 +1,109 @@
 {% extends "base.html" %}
 {% block title %}الإعدادات - RoboVAI{% endblock %}
 {% block content %}
-<div class="grid lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 glass-card p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-50">⚙️ إعدادات المشروع</h1>
-                <p class="text-slate-400 text-sm mt-1">تخصيص شخصية البوت والإعدادات المتقدمة</p>
-            </div>
-        </div>
-
-        <div class="mb-6">
-            <label class="label">اختر المشروع</label>
-            <select id="tenant_select" class="select-field" onchange="loadSettings()">
-                <option value="">-- اختر مشروعاً --</option>
-                {% for tenant in tenants %}
-                <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div id="settings-form">
-            <div class="text-center py-12 text-slate-400">
-                <div class="text-5xl mb-4">⚙️</div>
-                <p>اختر مشروعاً لعرض الإعدادات</p>
-            </div>
+<div class="space-y-6 fade-in">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-50">⚙️ الإعدادات</h1>
+            <p class="text-slate-400 mt-1">إعدادات المشروع والذكاء الاصطناعي</p>
         </div>
     </div>
 
-    <div class="space-y-6">
-        <!-- معلومات سريعة -->
-        <div class="glass-card p-6">
-            <h3 class="font-semibold text-slate-50 mb-4">📊 معلومات سريعة</h3>
-            <div class="space-y-3 text-sm">
-                <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span class="text-slate-400">عدد المشاريع</span>
-                    <span class="text-cyan-400 font-semibold">{{ tenants|length }}</span>
-                </div>
-            </div>
-        </div>
+    <!-- Tenant Selector -->
+    <div class="glass-card p-6">
+        <label class="label text-lg">🏢 اختر المشروع</label>
+        <select id="tenant_select" class="select-field text-lg" onchange="loadAllSettings()">
+            <option value="">-- اختر مشروعاً لعرض الإعدادات --</option>
+            {% for tenant in tenants %}
+            <option value="{{ tenant.api_key }}" data-id="{{ tenant.id }}">{{ tenant.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <!-- نصائح -->
-        <div class="glass-card p-6">
-            <h3 class="font-semibold text-slate-50 mb-4">💡 نصائح للإعدادات</h3>
-            <div class="text-sm text-slate-400 space-y-3">
-                <p><strong class="text-cyan-300">System Prompt:</strong> يحدد شخصية البوت وطريقة تحدثه مع العملاء</p>
-                <p><strong class="text-indigo-300">Webhook URL:</strong> لإرسال الإشعارات لنظام خارجي</p>
+    <div id="settings-content">
+        <!-- Placeholder when no tenant selected -->
+        <div class="grid lg:grid-cols-2 gap-6">
+            <div class="glass-card p-8 text-center">
+                <div class="text-6xl mb-4">🤖</div>
+                <h3 class="text-xl font-semibold text-slate-200 mb-2">إعدادات الذكاء الاصطناعي</h3>
+                <p class="text-slate-400">اختر مشروعاً لتكوين الذكاء الاصطناعي</p>
+            </div>
+            <div class="glass-card p-8 text-center">
+                <div class="text-6xl mb-4">🔗</div>
+                <h3 class="text-xl font-semibold text-slate-200 mb-2">Webhooks & API</h3>
+                <p class="text-slate-400">اختر مشروعاً لعرض روابط الـ API</p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- AI Settings Info Card -->
+<div class="fixed bottom-4 left-4 max-w-sm glass-card p-4 border-cyan-500/50 border z-40" id="ai-help-card">
+    <div class="flex items-start gap-3">
+        <div class="text-2xl">💡</div>
+        <div>
+            <h4 class="font-semibold text-slate-200 mb-1">إعداد الذكاء الاصطناعي</h4>
+            <p class="text-xs text-slate-400 mb-2">للحصول على مفتاح API مجاني من Groq:</p>
+            <ol class="text-xs text-slate-400 space-y-1 list-decimal list-inside">
+                <li>اذهب إلى <a href="https://console.groq.com" target="_blank" class="text-cyan-400 hover:underline">console.groq.com</a></li>
+                <li>سجّل حساب مجاني</li>
+                <li>انسخ API Key من Dashboard</li>
+            </ol>
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="mt-2 text-xs text-slate-500 hover:text-slate-300">
+                إخفاء ✕
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-function loadSettings() {
-    const apiKey = document.getElementById('tenant_select').value;
-    if (apiKey) {
-        htmx.ajax('GET', '/ui/settings/data?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#settings-form'});
+const BASE_URL = '{{ base_url }}';
+
+function loadAllSettings() {
+    const select = document.getElementById('tenant_select');
+    const apiKey = select.value;
+    const tenantId = select.options[select.selectedIndex]?.dataset?.id;
+    
+    if (!apiKey) {
+        document.getElementById('settings-content').innerHTML = `
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass-card p-8 text-center">
+                    <div class="text-6xl mb-4">🤖</div>
+                    <h3 class="text-xl font-semibold text-slate-200 mb-2">إعدادات الذكاء الاصطناعي</h3>
+                    <p class="text-slate-400">اختر مشروعاً لتكوين الذكاء الاصطناعي</p>
+                </div>
+                <div class="glass-card p-8 text-center">
+                    <div class="text-6xl mb-4">🔗</div>
+                    <h3 class="text-xl font-semibold text-slate-200 mb-2">Webhooks & API</h3>
+                    <p class="text-slate-400">اختر مشروعاً لعرض روابط الـ API</p>
+                </div>
+            </div>
+        `;
+        return;
     }
+    
+    htmx.ajax('GET', '/ui/settings/full?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#settings-content'});
+}
+
+function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ تم النسخ!';
+        btn.classList.add('bg-green-600');
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('bg-green-600');
+        }, 2000);
+    });
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg slide-in z-50 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white`;
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 </script>
 {% endblock %}

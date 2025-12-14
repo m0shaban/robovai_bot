@@ -41,6 +41,9 @@ class Settings(BaseSettings):
 
     # Convenience alias requested: GROQ_API_KEY can be used instead of LLM_API_KEY
     groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
+    
+    # NVIDIA NIM API support
+    nvidia_api_key: str = Field(default="", validation_alias="NVIDIA_API_KEY")
 
     # Webhook behavior
     webhook_timeout_seconds: float = Field(
@@ -48,7 +51,7 @@ class Settings(BaseSettings):
     )
 
     def effective_llm_api_key(self) -> str:
-        return self.llm_api_key or self.groq_api_key
+        return self.llm_api_key or self.groq_api_key or self.nvidia_api_key
 
 
 def admin_auth_enabled() -> bool:

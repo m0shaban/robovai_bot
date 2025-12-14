@@ -563,7 +563,57 @@ async def settings_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return jinja_templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants})
+    base_url = str(request.base_url).rstrip('/')
+    return jinja_templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants, "base_url": base_url})
+
+
+@router.get("/settings/full", response_class=HTMLResponse)
+async def settings_full(
+    request: Request,
+    tenant_api_key: str = "",
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Full settings view with AI status and webhooks"""
+    if not tenant_api_key:
+        return jinja_templates.TemplateResponse(
+            "_settings_form.html",
+            {"request": request, "tenant": None},
+        )
+    
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return jinja_templates.TemplateResponse(
+            "_settings_form.html",
+            {"request": request, "tenant": None},
+        )
+    
+    # Check AI configuration
+    ai_configured = bool(settings.effective_llm_api_key())
+    
+    # Determine AI provider
+    llm_url = settings.llm_base_url.lower()
+    if "groq" in llm_url:
+        ai_provider = "Groq"
+    elif "nvidia" in llm_url or "nim" in llm_url:
+        ai_provider = "NVIDIA NIM"
+    elif "openai" in llm_url:
+        ai_provider = "OpenAI"
+    else:
+        ai_provider = "Custom LLM"
+    
+    base_url = str(request.base_url).rstrip('/')
+    
+    return jinja_templates.TemplateResponse(
+        "_settings_form.html",
+        {
+            "request": request,
+            "tenant": tenant,
+            "ai_configured": ai_configured,
+            "ai_provider": ai_provider,
+            "ai_model": settings.llm_model,
+            "base_url": base_url,
+        },
+    )
 
 
 @router.get("/settings/data", response_class=HTMLResponse)
@@ -583,7 +633,30 @@ async def settings_data(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
-    return jinja_templates.TemplateResponse("_settings_form.html", {"request": request, "tenant": tenant})
+    
+    # Add AI status
+    ai_configured = bool(settings.effective_llm_api_key())
+    llm_url = settings.llm_base_url.lower()
+    if "groq" in llm_url:
+        ai_provider = "Groq"
+    elif "nvidia" in llm_url:
+        ai_provider = "NVIDIA NIM"
+    else:
+        ai_provider = "Custom LLM"
+    
+    base_url = str(request.base_url).rstrip('/')
+    
+    return jinja_templates.TemplateResponse(
+        "_settings_form.html", 
+        {
+            "request": request, 
+            "tenant": tenant,
+            "ai_configured": ai_configured,
+            "ai_provider": ai_provider,
+            "ai_model": settings.llm_model,
+            "base_url": base_url,
+        }
+    )
 
 
 @router.post("/settings/update", response_class=HTMLResponse)
