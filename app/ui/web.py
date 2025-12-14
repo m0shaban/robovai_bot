@@ -52,6 +52,11 @@ from app.crud.chat_log import (
     get_chat_history_for_lead, 
     create_chat_log
 )
+from app.crud.knowledge_base import (
+    create_kb_item,
+    delete_kb_item,
+    list_kb_items,
+)
 from app.models.chat_log import SenderType
 from app.services.telegram_service import send_telegram_message
 from app.services.meta_service import send_whatsapp_reply, send_page_message_text
@@ -1098,3 +1103,77 @@ async def inbox_send(
         "_inbox_messages.html",
         {"request": request, "messages": [chat_log]},
     )
+
+
+# ------------------------------------------------------------------------------
+# Knowledge Base Routes
+# ------------------------------------------------------------------------------
+
+@router.get("/kb", response_class=HTMLResponse)
+async def kb_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+):
+    tenants = await list_tenants(session=session)
+    return jinja_templates.TemplateResponse(
+        "knowledge_base.html",
+        {"request": request, "tenants": tenants},
+    )
+
+
+@router.get("/kb/list", response_class=HTMLResponse)
+async def kb_list(
+    request: Request,
+    tenant_id: int,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    items = await list_kb_items(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_kb_rows.html",
+        {"request": request, "items": items},
+    )
+
+
+@router.post("/kb/add", response_class=HTMLResponse)
+async def kb_add(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    form = await request.form()
+    tenant_id = int(form.get("tenant_id", 0))
+    title = form.get("title", "").strip()
+    content = form.get("content", "").strip()
+    
+    if tenant_id and title and content:
+        await create_kb_item(
+            session=session,
+            tenant_id=tenant_id,
+            title=title,
+            content=content,
+        )
+    
+    items = await list_kb_items(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_kb_rows.html",
+        {"request": request, "items": items},
+    )
+
+
+@router.post("/kb/delete", response_class=HTMLResponse)
+async def kb_delete(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    form = await request.form()
+    item_id = int(form.get("item_id", 0))
+    tenant_id = int(form.get("tenant_id", 0))
+    
+    if item_id:
+        await delete_kb_item(session=session, kb_id=item_id)
+    
+    items = await list_kb_items(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_kb_rows.html",
+        {"request": request, "items": items},
+    )
+

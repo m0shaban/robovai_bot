@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}قاعدة المعرفة - RoboVAI{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-50">📚 قاعدة المعرفة</h1>
+                <p class="text-slate-400 text-sm mt-1">أضف معلومات ومستندات لتدريب البوت عليها</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="label">اختر المشروع</label>
+            <select id="tenant_select" class="select-field" onchange="loadKB()">
+                <option value="">-- اختر مشروعاً --</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="kb-rows">
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">📚</div>
+                <p>اختر مشروعاً لعرض المحتوى</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-slate-50 mb-4">➕ إضافة محتوى جديد</h2>
+        
+        <form hx-post="/ui/kb/add" hx-target="#kb-rows" hx-on::after-request="this.reset()">
+            <input type="hidden" id="form_tenant_id" name="tenant_id" />
+            
+            <div class="mb-4">
+                <label class="label">العنوان</label>
+                <input type="text" name="title" placeholder="مثلاً: سياسة الاسترجاع" required class="input-field" />
+            </div>
+
+            <div class="mb-4">
+                <label class="label">المحتوى</label>
+                <textarea name="content" rows="8" placeholder="اكتب التفاصيل هنا..." required class="input-field"></textarea>
+                <p class="text-xs text-slate-500 mt-2">سيستخدم البوت هذا النص للإجابة على أسئلة العملاء.</p>
+            </div>
+
+            <button type="submit" class="btn-primary w-full">💾 حفظ المحتوى</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function loadKB() {
+    const tenantId = document.getElementById('tenant_select').value;
+    document.getElementById('form_tenant_id').value = tenantId;
+    if (tenantId) {
+        htmx.ajax('GET', '/ui/kb/list?tenant_id=' + tenantId, {target: '#kb-rows'});
+    }
+}
+</script>
+{% endblock %}

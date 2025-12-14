@@ -6,6 +6,7 @@ from app.models.quick_reply import QuickReply
 from app.models.scripted_response import ScriptedResponse
 from app.models.tenant import Tenant
 from app.models.message_template import MessageTemplate, TemplateCategory
+from app.models.knowledge_base import KnowledgeBase
 
 __all__ = [
     "Base",
@@ -19,4 +20,6 @@ __all__ = [
     "SenderType",
     "MessageTemplate",
     "TemplateCategory",
+    "KnowledgeBase",
+]    "TemplateCategory",
 ]

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.crud.scripted_response import list_active_scripted_responses
 from app.crud.tenant import get_tenant_by_id
+from app.crud.knowledge_base import search_kb_context
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,16 @@ class ChatManager:
                     return ChatResult(response=rule.response_text, source="bot")
 
         tenant = await get_tenant_by_id(session=self._session, tenant_id=tenant_id)
-        system_prompt = (
+        base_prompt = (
             tenant.system_prompt if tenant else None
         ) or "You are a helpful assistant."
+        
+        # Inject Knowledge Base Context
+        kb_context = await search_kb_context(self._session, tenant_id, user_message)
+        if kb_context:
+            system_prompt = f"{base_prompt}\n\n{kb_context}\n\nاستخدم المعلومات أعلاه للإجابة على سؤال المستخدم."
+        else:
+            system_prompt = base_prompt
 
         ai_text = await self._call_openai_compatible_chat(
             system_prompt=system_prompt, user_message=user_message
