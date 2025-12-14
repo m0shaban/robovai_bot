@@ -192,3 +192,81 @@ async def send_page_message_text(
             url, params={"access_token": page_access_token}, json=payload
         )
         resp.raise_for_status()
+
+
+# ============ INSTAGRAM MESSAGING ============
+
+async def send_instagram_message(
+    *,
+    access_token: str,
+    instagram_user_id: str,
+    recipient_id: str,
+    text: str,
+    quick_replies: list[dict[str, str]] | None = None,
+) -> None:
+    """Send a message via Instagram Graph API.
+    
+    Instagram uses the same Graph API as Messenger but with different endpoints.
+    """
+    if not access_token or not recipient_id:
+        return
+
+    url = f"https://graph.facebook.com/v21.0/{instagram_user_id}/messages"
+    
+    payload: dict[str, Any] = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": text},
+    }
+
+    # Instagram supports quick replies similar to Messenger
+    items = [q for q in (quick_replies or []) if q.get("id") and q.get("title")]
+    if items:
+        payload["message"]["quick_replies"] = [
+            {
+                "content_type": "text",
+                "title": str(q["title"])[:20],
+                "payload": str(q["id"])[:512],
+            }
+            for q in items[:13]  # Instagram supports up to 13 quick replies
+        ]
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.post(
+            url, params={"access_token": access_token}, json=payload
+        )
+        resp.raise_for_status()
+
+
+async def send_instagram_reply(
+    *,
+    access_token: str,
+    instagram_user_id: str,
+    recipient_id: str,
+    text: str,
+    quick_replies: list[dict[str, str]] | None = None,
+) -> None:
+    """Send Instagram message with fallback for quick replies."""
+    try:
+        if quick_replies:
+            await send_instagram_message(
+                access_token=access_token,
+                instagram_user_id=instagram_user_id,
+                recipient_id=recipient_id,
+                text=text,
+                quick_replies=quick_replies,
+            )
+            return
+    except Exception:
+        pass
+
+    # Fallback to text with menu
+    menu_text = format_quick_reply_menu_text(
+        text,
+        [q.get("title", "") for q in (quick_replies or [])],
+    )
+    await send_instagram_message(
+        access_token=access_token,
+        instagram_user_id=instagram_user_id,
+        recipient_id=recipient_id,
+        text=menu_text,
+    )

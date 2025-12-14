@@ -1,81 +1,88 @@
 {% extends "base.html" %}
+{% block title %}الردود السريعة - RoboVAI{% endblock %}
 {% block content %}
-<div class="grid md:grid-cols-3 gap-4">
-  <div class="card p-4 rounded-xl md:col-span-2">
-    <div class="flex items-center justify-between mb-3">
-      <div>
-        <div class="text-sm text-slate-400">Quick Replies</div>
-        <div class="text-xl font-semibold text-slate-50">Predefined Quick Replies</div>
-      </div>
-      <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
-              onclick="loadReplies()">
-        Refresh
-      </button>
-    </div>
-    <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-3 text-sm text-slate-300">
-      <strong>💡 Tip:</strong> Quick replies appear as buttons in chat. Great for common actions like "Talk to agent" or "View pricing".
-    </div>
-    <div id="reply-rows">
-      <p class="text-sm text-slate-400">Enter Tenant API Key and click Load.</p>
-    </div>
-  </div>
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-50">⚡ الردود السريعة</h1>
+                <p class="text-slate-400 text-sm mt-1">أزرار تظهر للمستخدم لاختيار رد سريع</p>
+            </div>
+        </div>
 
-  <div class="card p-4 rounded-xl space-y-3">
-    <div>
-      <label class="text-sm text-slate-300">Tenant API Key</label>
-      <input id="tenant_api_key" type="password" placeholder="Required"
-             class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+        <div class="mb-6">
+            <label class="label">اختر المشروع</label>
+            <select id="tenant_select" class="select-field" onchange="loadReplies()">
+                <option value="">-- اختر مشروعاً --</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="reply-rows">
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">⚡</div>
+                <p>اختر مشروعاً لعرض الردود السريعة</p>
+            </div>
+        </div>
     </div>
 
-    <form onsubmit="event.preventDefault(); createReply();" class="space-y-2">
-      <div>
-        <label class="text-sm text-slate-300">Title</label>
-        <input id="title" required placeholder="Button text"
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-      </div>
-      <div>
-        <label class="text-sm text-slate-300">Payload Text</label>
-        <textarea id="payload_text" required rows="2" placeholder="Message sent when clicked"
-                  class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm"></textarea>
-      </div>
-      <div>
-        <label class="text-sm text-slate-300">Sort Order</label>
-        <input id="sort_order" type="number" value="0"
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-      </div>
-      <button type="submit"
-              class="w-full mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
-        + Add Quick Reply
-      </button>
-    </form>
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-slate-50 mb-4">➕ إضافة رد سريع</h2>
+        
+        <form id="replyForm" class="space-y-4">
+            <input type="hidden" id="tenant_api_key" name="tenant_api_key" />
+            
+            <div>
+                <label class="label">عنوان الزر</label>
+                <input type="text" id="title" name="title" required placeholder="مثال: تواصل معنا" class="input-field" />
+            </div>
 
-    <button onclick="loadReplies()"
-            class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
-      Load Replies
-    </button>
-  </div>
+            <div>
+                <label class="label">نص الرد</label>
+                <textarea id="payload_text" name="payload_text" required rows="3" placeholder="الرسالة التي سترسل عند الضغط على الزر" class="input-field"></textarea>
+            </div>
+
+            <div>
+                <label class="label">الترتيب</label>
+                <input type="number" id="sort_order" name="sort_order" value="0" class="input-field" />
+            </div>
+
+            <button type="submit" class="btn-primary w-full">➕ إضافة الرد</button>
+        </form>
+
+        <div class="mt-6 p-4 bg-purple-900/20 border border-purple-700/50 rounded-xl">
+            <h3 class="font-semibold text-purple-300 mb-2">💡 نصيحة</h3>
+            <p class="text-sm text-slate-400">الردود السريعة تظهر كأزرار تفاعلية للمستخدم، مما يسهل التفاعل مع البوت دون الحاجة للكتابة.</p>
+        </div>
+    </div>
 </div>
 
 <script>
 function loadReplies() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  if (!apiKey) { alert('Enter Tenant API Key'); return; }
-  htmx.ajax('GET', '/ui/quick-replies/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#reply-rows'});
+    const apiKey = document.getElementById('tenant_select').value;
+    document.getElementById('tenant_api_key').value = apiKey;
+    if (apiKey) {
+        htmx.ajax('GET', '/ui/quick-replies/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#reply-rows'});
+    }
 }
-function createReply() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  const title = document.getElementById('title').value;
-  const payload = document.getElementById('payload_text').value;
-  const sort = document.getElementById('sort_order').value;
-  if (!apiKey || !title || !payload) { alert('Fill required fields'); return; }
-  const formData = new URLSearchParams({
-    tenant_api_key: apiKey,
-    title: title,
-    payload_text: payload,
-    sort_order: sort,
-    is_active: 'true'
-  });
-  htmx.ajax('POST', '/ui/quick-replies', {target: '#reply-rows', swap: 'innerHTML', values: formData});
-}
+
+document.getElementById('replyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const apiKey = document.getElementById('tenant_api_key').value;
+    if (!apiKey) { alert('اختر مشروعاً أولاً'); return; }
+    
+    const formData = new FormData(this);
+    formData.set('is_active', 'true');
+    
+    const response = await fetch('/ui/quick-replies', { method: 'POST', body: formData });
+    if (response.ok) {
+        document.getElementById('reply-rows').innerHTML = await response.text();
+        this.reset();
+        document.getElementById('tenant_api_key').value = apiKey;
+        showToast('تم إضافة الرد السريع بنجاح ✓');
+    }
+});
 </script>
 {% endblock %}

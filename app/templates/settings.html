@@ -1,43 +1,62 @@
 {% extends "base.html" %}
+{% block title %}الإعدادات - RoboVAI{% endblock %}
 {% block content %}
-<div class="card p-4 rounded-xl max-w-2xl mx-auto">
-  <div class="mb-4">
-    <div class="text-sm text-slate-400">Settings</div>
-    <div class="text-xl font-semibold text-slate-50">Tenant Configuration</div>
-  </div>
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-50">⚙️ إعدادات المشروع</h1>
+                <p class="text-slate-400 text-sm mt-1">تخصيص شخصية البوت والإعدادات المتقدمة</p>
+            </div>
+        </div>
 
-  <div class="mb-3">
-    <label class="text-sm text-slate-300">Tenant API Key</label>
-    <input id="tenant_api_key" type="password" placeholder="Enter your tenant API key"
-           class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-    <button onclick="loadSettings()"
-            class="mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
-      Load Settings
-    </button>
-  </div>
+        <div class="mb-6">
+            <label class="label">اختر المشروع</label>
+            <select id="tenant_select" class="select-field" onchange="loadSettings()">
+                <option value="">-- اختر مشروعاً --</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-  <div id="settings-form">
-    <p class="text-sm text-slate-400">Enter Tenant API Key and click Load to view/edit settings.</p>
-  </div>
+        <div id="settings-form">
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">⚙️</div>
+                <p>اختر مشروعاً لعرض الإعدادات</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <!-- معلومات سريعة -->
+        <div class="glass-card p-6">
+            <h3 class="font-semibold text-slate-50 mb-4">📊 معلومات سريعة</h3>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                    <span class="text-slate-400">عدد المشاريع</span>
+                    <span class="text-cyan-400 font-semibold">{{ tenants|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- نصائح -->
+        <div class="glass-card p-6">
+            <h3 class="font-semibold text-slate-50 mb-4">💡 نصائح للإعدادات</h3>
+            <div class="text-sm text-slate-400 space-y-3">
+                <p><strong class="text-cyan-300">System Prompt:</strong> يحدد شخصية البوت وطريقة تحدثه مع العملاء</p>
+                <p><strong class="text-indigo-300">Webhook URL:</strong> لإرسال الإشعارات لنظام خارجي</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 function loadSettings() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  if (!apiKey) { alert('Enter Tenant API Key'); return; }
-  htmx.ajax('GET', '/ui/settings/data?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#settings-form'});
-}
-function saveSettings() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  const systemPrompt = document.getElementById('system_prompt').value;
-  const webhookUrl = document.getElementById('webhook_url').value;
-  if (!apiKey) { alert('Enter Tenant API Key'); return; }
-  const formData = new URLSearchParams({
-    tenant_api_key: apiKey,
-    system_prompt: systemPrompt,
-    webhook_url: webhookUrl
-  });
-  htmx.ajax('POST', '/ui/settings/update', {target: '#settings-form', swap: 'innerHTML', values: formData});
+    const apiKey = document.getElementById('tenant_select').value;
+    if (apiKey) {
+        htmx.ajax('GET', '/ui/settings/data?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#settings-form'});
+    }
 }
 </script>
 {% endblock %}

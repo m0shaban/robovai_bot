@@ -1,34 +1,80 @@
 {% if error %}
-<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700 mb-3">{{ error }}</div>
-{% elif success %}
-<div class="text-sm text-emerald-400 p-3 bg-emerald-900/20 rounded border border-emerald-700 mb-3">{{ success }}</div>
-{% endif %}
+<div class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm">
+    ⚠️ {{ error }}
+</div>
+{% elif tenant %}
+<form id="settingsForm" class="space-y-6">
+    <input type="hidden" name="tenant_api_key" value="{{ tenant.api_key }}" />
+    
+    {% if success %}
+    <div class="p-4 bg-green-900/20 border border-green-700/50 rounded-xl text-green-300 text-sm">
+        ✅ {{ success }}
+    </div>
+    {% endif %}
 
-{% if tenant %}
-<form onsubmit="event.preventDefault(); saveSettings();" class="space-y-3">
-  <div>
-    <label class="text-sm text-slate-300">Tenant Name</label>
-    <div class="text-sm font-semibold text-slate-100 mt-1">{{ tenant.name }}</div>
-  </div>
+    <!-- معلومات المشروع -->
+    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+        <h3 class="font-semibold text-slate-200 mb-3">📊 معلومات المشروع</h3>
+        <div class="grid gap-3">
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400">اسم المشروع</span>
+                <span class="text-slate-200 font-medium">{{ tenant.name }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400">API Key</span>
+                <code class="text-xs bg-slate-900 px-2 py-1 rounded text-cyan-400">{{ tenant.api_key[:20] }}...</code>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400">تاريخ الإنشاء</span>
+                <span class="text-slate-300 text-sm">{{ tenant.created_at.strftime('%Y-%m-%d') if tenant.created_at else '-' }}</span>
+            </div>
+        </div>
+    </div>
 
-  <div>
-    <label class="text-sm text-slate-300">System Prompt</label>
-    <textarea id="system_prompt" rows="6" placeholder="AI system prompt (optional)"
-              class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm">{{ tenant.system_prompt or "" }}</textarea>
-    <p class="text-xs text-slate-400 mt-1">Instructions for the AI assistant behavior.</p>
-  </div>
+    <!-- System Prompt -->
+    <div>
+        <label class="label">🧠 System Prompt (شخصية البوت)</label>
+        <textarea name="system_prompt" rows="6" class="input-field" placeholder="أنت مساعد ذكي ودود. تجيب على الأسئلة بشكل مختصر ومفيد...">{{ tenant.system_prompt or '' }}</textarea>
+        <p class="text-xs text-slate-500 mt-1">يحدد كيف يتصرف البوت ويتحدث مع العملاء</p>
+    </div>
 
-  <div>
-    <label class="text-sm text-slate-300">Webhook URL</label>
-    <input id="webhook_url" type="url" placeholder="https://your-webhook.com/endpoint"
-           value="{{ tenant.webhook_url or '' }}"
-           class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-    <p class="text-xs text-slate-400 mt-1">Optional webhook to receive lead/chat events.</p>
-  </div>
+    <!-- Webhook URL -->
+    <div>
+        <label class="label">🔗 Webhook URL (اختياري)</label>
+        <input type="url" name="webhook_url" value="{{ tenant.webhook_url or '' }}" placeholder="https://your-server.com/webhook" class="input-field" />
+        <p class="text-xs text-slate-500 mt-1">لإرسال إشعارات لنظام خارجي عند كل رسالة</p>
+    </div>
 
-  <button type="submit"
-          class="w-full px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
-    Save Settings
-  </button>
+    <button type="submit" class="btn-primary w-full">
+        💾 حفظ الإعدادات
+    </button>
 </form>
+
+<script>
+document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/ui/settings/update', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const html = await response.text();
+            document.getElementById('settings-form').innerHTML = html;
+            showToast('تم حفظ الإعدادات بنجاح ✓');
+        }
+    } catch (error) {
+        showToast('حدث خطأ أثناء الحفظ', 'error');
+    }
+});
+</script>
+{% else %}
+<div class="text-center py-8 text-slate-400">
+    <div class="text-4xl mb-3">⚙️</div>
+    <p>اختر مشروعاً لعرض الإعدادات</p>
+</div>
 {% endif %}

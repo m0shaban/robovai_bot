@@ -1,82 +1,95 @@
 {% extends "base.html" %}
+{% block title %}المشاريع - RoboVAI{% endblock %}
 {% block content %}
-<!-- Quick Start Guide -->
+<!-- رسالة ترحيب للمستخدمين الجدد -->
 {% if tenants|length == 0 %}
-<div class="bg-gradient-to-r from-cyan-900/30 to-indigo-900/30 border border-cyan-700/50 rounded-xl p-6 mb-6">
-  <div class="flex items-start space-x-4">
-    <div class="text-4xl">🚀</div>
+<div class="bg-gradient-to-r from-cyan-900/30 to-indigo-900/30 border border-cyan-700/50 rounded-2xl p-6 mb-6">
+  <div class="flex items-start gap-4">
+    <div class="text-5xl">🚀</div>
     <div>
-      <h3 class="text-lg font-semibold text-slate-50 mb-2">Welcome to RoboVAI!</h3>
-      <p class="text-sm text-slate-300 mb-3">Start by creating your first tenant. Each tenant represents a separate chatbot instance with its own settings and data.</p>
-      <ol class="text-sm text-slate-400 space-y-1 list-decimal list-inside">
-        <li>Create a tenant below (admin password required if set)</li>
-        <li>Copy the generated API key</li>
-        <li>Configure channels, rules, and quick replies</li>
-        <li>Integrate with Telegram, WhatsApp, or Meta</li>
+      <h3 class="text-xl font-bold text-slate-50 mb-2">مرحباً بك في RoboVAI!</h3>
+      <p class="text-slate-300 mb-4">ابدأ بإنشاء مشروعك الأول. كل مشروع يمثل بوت منفصل بإعداداته وبياناته الخاصة.</p>
+      <ol class="text-sm text-slate-400 space-y-2">
+        <li class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
+          أنشئ مشروعاً جديداً من النموذج الجانبي
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
+          احفظ API Key للاستخدام لاحقاً
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">3</span>
+          اربط القنوات وخصص الإعدادات
+        </li>
       </ol>
     </div>
   </div>
 </div>
 {% endif %}
 
-<div class="grid md:grid-cols-3 gap-4 mb-6">
-  <div class="card p-4 rounded-xl md:col-span-2">
-    <div class="flex items-center justify-between mb-3">
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- قائمة المشاريع -->
+  <div class="lg:col-span-2 glass-card p-6">
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <div class="text-sm text-slate-400">Tenants</div>
-        <div class="text-xl font-semibold text-slate-50">All tenants ({{ tenants|length }})</div>
+        <h1 class="text-2xl font-bold text-slate-50">👥 المشاريع</h1>
+        <p class="text-slate-400 text-sm mt-1">إجمالي {{ tenants|length }} مشروع</p>
       </div>
-      <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
-              hx-get="/ui/tenants/rows" hx-target="#tenant-rows" hx-swap="outerHTML">
-        Refresh
+      <button class="btn-secondary text-sm" hx-get="/ui/tenants/rows" hx-target="#tenant-rows" hx-swap="innerHTML">
+        🔄 تحديث
       </button>
     </div>
+
     <div id="tenant-rows">
       {% include "_tenant_rows.html" %}
     </div>
   </div>
 
-  <div class="card p-4 rounded-xl space-y-3">
-    <div>
-      <div class="text-sm text-slate-400">Admin password</div>
-      <input id="admin_password" name="admin_password" type="password" placeholder="Required for write ops"
-             class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-      {% if admin_protected %}
-        <p class="text-xs text-amber-400 mt-1">ADMIN_PASSWORD مطلوب للإضافة والتعديل والحذف.</p>
-      {% else %}
-        <p class="text-xs text-emerald-400 mt-1">ADMIN_PASSWORD غير مفعّل (تصرّف بحذر في بيئة الإنتاج).</p>
-      {% endif %}
+  <!-- نموذج إضافة مشروع -->
+  <div class="glass-card p-6">
+    <h2 class="text-xl font-bold text-slate-50 mb-4">➕ مشروع جديد</h2>
+    
+    {% if admin_protected %}
+    <div class="mb-4">
+      <label class="label">🔒 كلمة مرور الأدمن</label>
+      <input id="admin_password" name="admin_password" type="password" placeholder="مطلوبة للعمليات"
+             class="input-field" />
+      <p class="text-xs text-amber-400 mt-1">مطلوبة للإضافة والتعديل والحذف</p>
     </div>
+    {% else %}
+    <input type="hidden" id="admin_password" value="" />
+    {% endif %}
 
-    <form hx-post="/ui/tenants" hx-target="#tenant-rows" hx-swap="outerHTML" hx-include="#admin_password"
-          class="space-y-2">
+    <form hx-post="/ui/tenants" hx-target="#tenant-rows" hx-swap="innerHTML" hx-include="#admin_password" class="space-y-4">
       <div>
-        <label class="text-sm text-slate-300">Name</label>
-        <input name="name" required placeholder="Tenant name"
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+        <label class="label">اسم المشروع *</label>
+        <input name="name" required placeholder="مثال: متجر الإلكترونيات" class="input-field" />
       </div>
+
       <div>
-        <label class="text-sm text-slate-300">System Prompt</label>
-        <textarea name="system_prompt" rows="2" placeholder="Optional system prompt"
-                  class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm"></textarea>
+        <label class="label">System Prompt (اختياري)</label>
+        <textarea name="system_prompt" rows="3" placeholder="أنت مساعد ذكي تساعد العملاء في..." class="input-field"></textarea>
+        <p class="text-xs text-slate-500 mt-1">يحدد شخصية البوت وطريقة تحدثه</p>
       </div>
+
       <div>
-        <label class="text-sm text-slate-300">Webhook URL</label>
-        <input name="webhook_url" placeholder="https://..."
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+        <label class="label">Webhook URL (اختياري)</label>
+        <input name="webhook_url" type="url" placeholder="https://your-server.com/webhook" class="input-field" />
       </div>
-      <button type="submit"
-              class="w-full mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
-        + Add Tenant
+
+      <button type="submit" class="btn-primary w-full">
+        ➕ إنشاء المشروع
       </button>
     </form>
 
-    <div class="text-xs text-slate-400 border-t border-slate-800 pt-3">
-      <strong class="text-slate-300">💡 Tips:</strong><br>
-      • Operations happen instantly via HTMX (no page reload)<br>
-      • API keys are shown for integration - save them securely<br>
-      • Set ADMIN_PASSWORD in production for security<br>
-      • Each tenant has isolated data and settings
+    <div class="mt-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700">
+      <h3 class="font-semibold text-slate-300 mb-2">💡 نصائح</h3>
+      <ul class="text-xs text-slate-400 space-y-1">
+        <li>• كل مشروع له API Key فريد</li>
+        <li>• البيانات منفصلة تماماً بين المشاريع</li>
+        <li>• يمكنك ربط قنوات متعددة بكل مشروع</li>
+      </ul>
     </div>
   </div>
 </div>

@@ -1,50 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RoboVAI Admin</title>
-    <!-- Tailwind via CDN (for simplicity/no build) -->
+    <title>{% block title %}RoboVAI{% endblock %}</title>
+    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTMX for partial updates -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <style>
-      body { background: #0f172a; color: #e2e8f0; }
-      .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
-      .nav-link { @apply px-3 py-2 rounded-lg text-sm transition; }
-      .nav-link:hover { @apply bg-slate-800; }
-      .nav-link.active { @apply bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold; }
+      body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); color: #e2e8f0; min-height: 100vh; }
+      .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
+      .nav-link { @apply px-4 py-2 rounded-xl text-sm transition-all duration-300 flex items-center gap-2; }
+      .nav-link:hover { @apply bg-slate-800/80 transform scale-105; }
+      .nav-link.active { @apply bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold shadow-lg shadow-cyan-500/25; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+      .fade-in { animation: fadeIn 0.5s ease-out; }
+      .slide-in { animation: slideIn 0.3s ease-out; }
+      .btn-primary { @apply px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-105; }
+      .btn-secondary { @apply px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 transition-all duration-300 hover:bg-slate-700; }
+      .btn-danger { @apply px-3 py-1.5 rounded-lg bg-red-600/20 border border-red-500/50 text-red-400 text-sm transition-all hover:bg-red-600/40; }
+      .input-field { @apply w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all; }
+      .select-field { @apply w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all cursor-pointer; }
+      .label { @apply block text-sm font-medium text-slate-300 mb-2; }
+      .glass-card { @apply bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
 <body class="min-h-screen">
-    <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur">
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4">
             <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500"></div>
-                    <div>
-                        <div class="text-lg font-semibold text-slate-50">RoboVAI Admin</div>
-                        <div class="text-xs text-slate-400">FastAPI + HTMX Dashboard</div>
+                <a href="/ui/" class="flex items-center gap-3 group">
+                    <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/25 group-hover:scale-110 transition-transform">
+                        🤖
                     </div>
+                    <div>
+                        <div class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">RoboVAI</div>
+                        <div class="text-xs text-slate-400">منصة الشات بوت الذكي</div>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <span class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        متصل
+                    </span>
                 </div>
-                <div class="text-xs text-slate-400">Admin Panel</div>
             </div>
             
-            <!-- Navigation -->
-            <nav class="flex flex-wrap gap-2 text-slate-200">
-                <a href="/ui/tenants" class="nav-link" title="Manage tenants and API keys">👥 Tenants</a>
-                <a href="/ui/channels" class="nav-link" title="Configure Telegram, WhatsApp, Meta integrations">📱 Channels</a>
-                <a href="/ui/quick-replies" class="nav-link" title="Create quick reply buttons">⚡ Quick Replies</a>
-                <a href="/ui/rules" class="nav-link" title="Define keyword-triggered responses">📋 Rules</a>
-                <a href="/ui/leads" class="nav-link" title="View collected customer leads">👤 Leads</a>
-                <a href="/ui/chatlogs" class="nav-link" title="Browse conversation history">💬 Chat Logs</a>
-                <a href="/ui/settings" class="nav-link" title="Configure system prompt and webhooks">⚙️ Settings</a>
+            <nav class="flex flex-wrap gap-2">
+                <a href="/ui/tenants" class="nav-link {% if '/tenants' in request.url.path %}active{% endif %}">
+                    <span>👥</span> المشاريع
+                </a>
+                <a href="/ui/channels" class="nav-link {% if '/channels' in request.url.path %}active{% endif %}">
+                    <span>📱</span> القنوات
+                </a>
+                <a href="/ui/quick-replies" class="nav-link {% if '/quick-replies' in request.url.path %}active{% endif %}">
+                    <span>⚡</span> الردود السريعة
+                </a>
+                <a href="/ui/rules" class="nav-link {% if '/rules' in request.url.path %}active{% endif %}">
+                    <span>📋</span> القواعد
+                </a>
+                <a href="/ui/leads" class="nav-link {% if '/leads' in request.url.path %}active{% endif %}">
+                    <span>👤</span> العملاء
+                </a>
+                <a href="/ui/chatlogs" class="nav-link {% if '/chatlogs' in request.url.path %}active{% endif %}">
+                    <span>💬</span> المحادثات
+                </a>
+                <a href="/ui/test-chat" class="nav-link {% if '/test-chat' in request.url.path %}active{% endif %}">
+                    <span>🧪</span> تجربة
+                </a>
+                <a href="/ui/widget" class="nav-link {% if '/widget' in request.url.path %}active{% endif %}">
+                    <span>🔌</span> ويدجت
+                </a>
+                <a href="/ui/settings" class="nav-link {% if '/settings' in request.url.path %}active{% endif %}">
+                    <span>⚙️</span> إعدادات
+                </a>
             </nav>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8 fade-in">
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="border-t border-slate-800/50 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
+            <p>© 2024 RoboVAI - منصة الشات بوت الذكي</p>
+        </div>
+    </footer>
+
+    <script>
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 left-4 px-6 py-3 rounded-xl text-white text-sm font-medium slide-in z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    </script>
 </body>
 </html>

@@ -1,85 +1,98 @@
 {% extends "base.html" %}
+{% block title %}القنوات - RoboVAI{% endblock %}
 {% block content %}
-<div class="grid md:grid-cols-3 gap-4">
-  <div class="card p-4 rounded-xl md:col-span-2">
-    <div class="flex items-center justify-between mb-3">
-      <div>
-        <div class="text-sm text-slate-400">Channels</div>
-        <div class="text-xl font-semibold text-slate-50">Channel Integrations</div>
-      </div>
-      <button class="px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-200 border border-slate-700"
-              onclick="loadChannels()">
-        Refresh
-      </button>
-    </div>
-    <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-3 text-sm text-slate-300">
-      <strong>💡 Tip:</strong> After creating a channel, use the verify token to configure webhooks in Telegram/Meta platforms.
-    </div>
-    <div id="channel-rows">
-      <p class="text-sm text-slate-400">Enter Tenant API Key and click Load to view channels.</p>
-    </div>
-  </div>
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-50">📱 قنوات التواصل</h1>
+                <p class="text-slate-400 text-sm mt-1">اربط البوت مع تيليجرام، واتساب، ماسنجر وإنستجرام</p>
+            </div>
+        </div>
 
-  <div class="card p-4 rounded-xl space-y-3">
-    <div>
-      <label class="text-sm text-slate-300">Tenant API Key</label>
-      <input id="tenant_api_key" type="password" placeholder="Required"
-             class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
+        <div class="mb-6">
+            <label class="label">اختر المشروع</label>
+            <select id="tenant_select" class="select-field" onchange="loadChannels()">
+                <option value="">-- اختر مشروعاً --</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="channel-rows">
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">📱</div>
+                <p>اختر مشروعاً لعرض القنوات المتصلة</p>
+            </div>
+        </div>
     </div>
 
-    <form onsubmit="event.preventDefault(); createChannel();" class="space-y-2">
-      <div>
-        <label class="text-sm text-slate-300">Channel Type</label>
-        <select id="channel_type" required
-                class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm">
-          <option value="telegram">Telegram</option>
-          <option value="meta">Meta (WhatsApp/Facebook)</option>
-          <option value="whatsapp">WhatsApp</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-sm text-slate-300">External ID</label>
-        <input id="external_id" placeholder="Bot ID / Page ID"
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-      </div>
-      <div>
-        <label class="text-sm text-slate-300">Access Token</label>
-        <input id="access_token" type="password" placeholder="Optional"
-               class="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm" />
-      </div>
-      <button type="submit"
-              class="w-full mt-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
-        + Add Channel
-      </button>
-    </form>
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-slate-50 mb-4">➕ إضافة قناة جديدة</h2>
+        
+        <form id="channelForm" class="space-y-4">
+            <input type="hidden" id="tenant_api_key" name="tenant_api_key" />
+            
+            <div>
+                <label class="label">نوع القناة</label>
+                <select id="channel_type" name="channel_type" required class="select-field">
+                    <option value="telegram">🤖 تيليجرام</option>
+                    <option value="whatsapp">💬 واتساب</option>
+                    <option value="meta">💙 ماسنجر فيسبوك</option>
+                    <option value="instagram">📸 إنستجرام</option>
+                </select>
+            </div>
 
-    <button onclick="loadChannels()"
-            class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
-      Load Channels
-    </button>
-  </div>
+            <div>
+                <label class="label">معرّف القناة</label>
+                <input type="text" id="external_id" name="external_id" placeholder="Bot ID / Page ID" class="input-field" />
+            </div>
+
+            <div>
+                <label class="label">Access Token</label>
+                <input type="password" id="access_token" name="access_token" placeholder="توكن الوصول" class="input-field" />
+            </div>
+
+            <button type="submit" class="btn-primary w-full">➕ إضافة القناة</button>
+        </form>
+
+        <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
+            <h3 class="font-semibold text-blue-300 mb-2">💡 كيفية الربط</h3>
+            <div class="text-sm text-slate-400 space-y-2">
+                <p><strong>تيليجرام:</strong> @BotFather</p>
+                <p><strong>واتساب:</strong> Meta Business API</p>
+                <p><strong>ماسنجر:</strong> Facebook Developer</p>
+                <p><strong>إنستجرام:</strong> Instagram Graph API</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 function loadChannels() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  if (!apiKey) { alert('Enter Tenant API Key'); return; }
-  htmx.ajax('GET', '/ui/channels/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#channel-rows'});
+    const apiKey = document.getElementById('tenant_select').value;
+    document.getElementById('tenant_api_key').value = apiKey;
+    if (apiKey) {
+        htmx.ajax('GET', '/ui/channels/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#channel-rows'});
+    }
 }
-function createChannel() {
-  const apiKey = document.getElementById('tenant_api_key').value;
-  const channelType = document.getElementById('channel_type').value;
-  const externalId = document.getElementById('external_id').value;
-  const accessToken = document.getElementById('access_token').value;
-  if (!apiKey) { alert('Enter Tenant API Key'); return; }
-  const formData = new URLSearchParams({
-    tenant_api_key: apiKey,
-    channel_type: channelType,
-    external_id: externalId,
-    access_token: accessToken,
-    is_active: 'true'
-  });
-  htmx.ajax('POST', '/ui/channels', {target: '#channel-rows', swap: 'innerHTML', values: formData});
-}
+
+document.getElementById('channelForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const apiKey = document.getElementById('tenant_api_key').value;
+    if (!apiKey) { alert('اختر مشروعاً أولاً'); return; }
+    
+    const formData = new FormData(this);
+    formData.set('is_active', 'true');
+    
+    const response = await fetch('/ui/channels', { method: 'POST', body: formData });
+    if (response.ok) {
+        document.getElementById('channel-rows').innerHTML = await response.text();
+        this.reset();
+        document.getElementById('tenant_api_key').value = apiKey;
+        showToast('تم إضافة القناة بنجاح ✓');
+    }
+});
 </script>
 {% endblock %}

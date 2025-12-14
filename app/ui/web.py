@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import secrets
+import json
 from pathlib import Path
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -73,6 +75,7 @@ async def ui_root(
     return RedirectResponse(url="/ui/tenants", status_code=status.HTTP_302_FOUND)
 
 
+# ============ TENANTS ============
 @router.get("/tenants", response_class=HTMLResponse)
 async def tenants_page(
     request: Request,
@@ -191,53 +194,69 @@ async def delete_tenant_web(
 
 # ============ CHANNELS ============
 @router.get("/channels", response_class=HTMLResponse)
-async def channels_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("channels.html", {"request": request})
+async def channels_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("channels.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/channels/rows", response_class=HTMLResponse)
 async def channels_rows(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_channel_rows.html", {"request": request, "channels": [], "error": "اختر مشروعاً أولاً"}
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_channel_rows.html", {"request": request, "channels": [], "error": "Invalid tenant_api_key"}
+            "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels})
+    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
 
 
 @router.post("/channels", response_class=HTMLResponse)
 async def create_channel_web(
     request: Request,
-    tenant_api_key: str,
-    channel_type: str,
-    external_id: str = "",
-    access_token: str = "",
-    verify_token: str = "",
-    is_active: bool = True,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    channel_type = form.get("channel_type", "").strip().lower()
+    external_id = form.get("external_id", "").strip()
+    access_token = form.get("access_token", "").strip()
+    verify_token = form.get("verify_token", "").strip() or secrets.token_urlsafe(16)
+    is_active = form.get("is_active", "true").lower() == "true"
+    
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API مطلوب"}
+        )
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_channel_rows.html", {"request": request, "channels": [], "error": "Invalid tenant_api_key"}
+            "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
+    
     await create_integration(
         session=session,
         tenant_id=tenant.id,
-        channel_type=channel_type.strip().lower(),
-        external_id=external_id.strip() or None,
-        access_token=access_token.strip() or None,
-        verify_token=verify_token.strip() or None,
+        channel_type=channel_type,
+        external_id=external_id or None,
+        access_token=access_token or None,
+        verify_token=verify_token,
         is_active=is_active,
     )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
     return templates.TemplateResponse(
-        "_channel_rows.html", {"request": request, "channels": channels}, status_code=status.HTTP_201_CREATED
+        "_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
 
@@ -245,57 +264,77 @@ async def create_channel_web(
 async def delete_channel_web(
     request: Request,
     channel_id: int,
-    tenant_api_key: str,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_channel_rows.html", {"request": request, "channels": [], "error": "Invalid tenant_api_key"}
+            "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
+    
     channel = await get_integration_by_id(session=session, integration_id=channel_id)
     if channel and channel.tenant_id == tenant.id:
         await delete_integration(session=session, integration=channel)
+    
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels})
+    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
 
 
 # ============ QUICK REPLIES ============
 @router.get("/quick-replies", response_class=HTMLResponse)
-async def quick_replies_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("quick_replies.html", {"request": request})
+async def quick_replies_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("quick_replies.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/quick-replies/rows", response_class=HTMLResponse)
 async def quick_replies_rows(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "اختر مشروعاً أولاً"}
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "Invalid tenant_api_key"}
+            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies})
+    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
 
 
 @router.post("/quick-replies", response_class=HTMLResponse)
 async def create_quick_reply_web(
     request: Request,
-    tenant_api_key: str,
-    title: str,
-    payload_text: str,
-    sort_order: int = 0,
-    is_active: bool = True,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    title = form.get("title", "").strip()
+    payload_text = form.get("payload_text", "").strip()
+    sort_order = int(form.get("sort_order", "0") or "0")
+    is_active = form.get("is_active", "true").lower() == "true"
+    
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API مطلوب"}
+        )
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "Invalid tenant_api_key"}
+            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
+    
     await create_quick_reply(
         session=session,
         tenant_id=tenant.id,
@@ -306,7 +345,7 @@ async def create_quick_reply_web(
     )
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
     return templates.TemplateResponse(
-        "_quick_reply_rows.html", {"request": request, "replies": replies}, status_code=status.HTTP_201_CREATED
+        "_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
 
@@ -314,56 +353,76 @@ async def create_quick_reply_web(
 async def delete_quick_reply_web(
     request: Request,
     reply_id: int,
-    tenant_api_key: str,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "Invalid tenant_api_key"}
+            "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
+    
     reply = await get_quick_reply_by_id(session=session, quick_reply_id=reply_id)
     if reply and reply.tenant_id == tenant.id:
         await delete_quick_reply(session=session, quick_reply=reply)
+    
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies})
+    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
 
 
 # ============ RULES (Scripted Responses) ============
 @router.get("/rules", response_class=HTMLResponse)
-async def rules_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("rules.html", {"request": request})
+async def rules_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("rules.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/rules/rows", response_class=HTMLResponse)
 async def rules_rows(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_rule_rows.html", {"request": request, "rules": [], "error": "اختر مشروعاً أولاً"}
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_rule_rows.html", {"request": request, "rules": [], "error": "Invalid tenant_api_key"}
+            "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules})
+    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
 
 
 @router.post("/rules", response_class=HTMLResponse)
 async def create_rule_web(
     request: Request,
-    tenant_api_key: str,
-    trigger_keyword: str,
-    response_text: str,
-    is_active: bool = True,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    trigger_keyword = form.get("trigger_keyword", "").strip()
+    response_text = form.get("response_text", "").strip()
+    is_active = form.get("is_active", "true").lower() == "true"
+    
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API مطلوب"}
+        )
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_rule_rows.html", {"request": request, "rules": [], "error": "Invalid tenant_api_key"}
+            "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
+    
     await create_scripted_response(
         session=session,
         tenant_id=tenant.id,
@@ -373,7 +432,7 @@ async def create_rule_web(
     )
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
     return templates.TemplateResponse(
-        "_rule_rows.html", {"request": request, "rules": rules}, status_code=status.HTTP_201_CREATED
+        "_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
 
@@ -381,84 +440,109 @@ async def create_rule_web(
 async def delete_rule_web(
     request: Request,
     rule_id: int,
-    tenant_api_key: str,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_rule_rows.html", {"request": request, "rules": [], "error": "Invalid tenant_api_key"}
+            "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
+    
     rule = await get_scripted_response_by_id(session=session, scripted_response_id=rule_id)
     if rule and rule.tenant_id == tenant.id:
         await delete_scripted_response(session=session, scripted_response=rule)
+    
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules})
+    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
 
 
 # ============ LEADS ============
 @router.get("/leads", response_class=HTMLResponse)
-async def leads_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("leads.html", {"request": request})
+async def leads_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("leads.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/leads/rows", response_class=HTMLResponse)
 async def leads_rows(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_lead_rows.html", {"request": request, "leads": [], "error": "اختر مشروعاً أولاً"}
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_lead_rows.html", {"request": request, "leads": [], "error": "Invalid tenant_api_key"}
+            "_lead_rows.html", {"request": request, "leads": [], "error": "مفتاح API غير صالح"}
         )
     leads = await list_leads(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_lead_rows.html", {"request": request, "leads": leads})
+    return templates.TemplateResponse("_lead_rows.html", {"request": request, "leads": leads, "tenant": tenant})
 
 
 # ============ CHAT LOGS ============
 @router.get("/chatlogs", response_class=HTMLResponse)
-async def chatlogs_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("chatlogs.html", {"request": request})
+async def chatlogs_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("chatlogs.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/chatlogs/rows", response_class=HTMLResponse)
 async def chatlogs_rows(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_chatlog_rows.html", {"request": request, "logs": [], "error": "اختر مشروعاً أولاً"}
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
-            "_chatlog_rows.html", {"request": request, "logs": [], "error": "Invalid tenant_api_key"}
+            "_chatlog_rows.html", {"request": request, "logs": [], "error": "مفتاح API غير صالح"}
         )
     logs = await list_chat_logs_for_tenant(session=session, tenant_id=tenant.id, limit=200)
-    return templates.TemplateResponse("_chatlog_rows.html", {"request": request, "logs": logs})
+    return templates.TemplateResponse("_chatlog_rows.html", {"request": request, "logs": logs, "tenant": tenant})
 
 
 # ============ SETTINGS ============
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("settings.html", {"request": request})
+async def settings_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/settings/data", response_class=HTMLResponse)
 async def settings_data(
     request: Request,
-    tenant_api_key: str,
+    tenant_api_key: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_settings_form.html",
+            {"request": request, "tenant": None, "error": "اختر مشروعاً أولاً"},
+        )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
             "_settings_form.html",
-            {
-                "request": request,
-                "tenant": None,
-                "error": "Invalid tenant_api_key",
-            },
+            {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
     return templates.TemplateResponse("_settings_form.html", {"request": request, "tenant": tenant})
 
@@ -466,21 +550,26 @@ async def settings_data(
 @router.post("/settings/update", response_class=HTMLResponse)
 async def update_settings_web(
     request: Request,
-    tenant_api_key: str,
-    system_prompt: str = "",
-    webhook_url: str = "",
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    system_prompt = form.get("system_prompt", "").strip()
+    webhook_url = form.get("webhook_url", "").strip()
+    
+    if not tenant_api_key:
+        return templates.TemplateResponse(
+            "_settings_form.html",
+            {"request": request, "tenant": None, "error": "مفتاح API مطلوب"},
+        )
+    
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
         return templates.TemplateResponse(
             "_settings_form.html",
-            {
-                "request": request,
-                "tenant": None,
-                "error": "Invalid tenant_api_key",
-            },
+            {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
+    
     await update_tenant_settings(
         session=session,
         tenant=tenant,
@@ -490,5 +579,146 @@ async def update_settings_web(
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant.id)
     return templates.TemplateResponse(
         "_settings_form.html",
-        {"request": request, "tenant": tenant, "success": "Settings updated successfully"},
+        {"request": request, "tenant": tenant, "success": "تم حفظ الإعدادات بنجاح ✓"},
     )
+
+
+# ============ TEST CHAT ============
+@router.get("/test-chat", response_class=HTMLResponse)
+async def test_chat_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("test_chat.html", {"request": request, "tenants": tenants})
+
+
+@router.post("/test-chat/send", response_class=HTMLResponse)
+async def send_test_message(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Process test chat message and return AI response"""
+    form = await request.form()
+    tenant_api_key = form.get("tenant_api_key", "").strip()
+    message = form.get("message", "").strip()
+    
+    if not tenant_api_key or not message:
+        return HTMLResponse(
+            '<div class="text-red-400 text-sm">الرجاء اختيار مشروع وكتابة رسالة</div>'
+        )
+    
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return HTMLResponse(
+            '<div class="text-red-400 text-sm">مفتاح API غير صالح</div>'
+        )
+    
+    # Import chat service
+    from app.services.chat_service import process_message
+    
+    try:
+        # Process the message through AI
+        response = await process_message(
+            session=session,
+            tenant_id=tenant.id,
+            channel="test",
+            sender_id="test_user",
+            message_text=message,
+        )
+        
+        return templates.TemplateResponse(
+            "_chat_message.html",
+            {
+                "request": request,
+                "user_message": message,
+                "bot_response": response,
+                "timestamp": datetime.now().strftime("%H:%M"),
+            }
+        )
+    except Exception as e:
+        return HTMLResponse(
+            f'<div class="text-red-400 text-sm">خطأ: {str(e)}</div>'
+        )
+
+
+# ============ WIDGET GENERATOR ============
+@router.get("/widget", response_class=HTMLResponse)
+async def widget_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    return templates.TemplateResponse("widget.html", {"request": request, "tenants": tenants})
+
+
+@router.get("/widget/generate", response_class=HTMLResponse)
+async def generate_widget_code(
+    request: Request,
+    tenant_api_key: str = "",
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    if not tenant_api_key:
+        return HTMLResponse('<div class="text-red-400">اختر مشروعاً أولاً</div>')
+    
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return HTMLResponse('<div class="text-red-400">مفتاح API غير صالح</div>')
+    
+    # Get base URL from request
+    base_url = str(request.base_url).rstrip('/')
+    
+    return templates.TemplateResponse(
+        "_widget_code.html",
+        {"request": request, "tenant": tenant, "api_key": tenant_api_key, "base_url": base_url}
+    )
+
+
+# ============ WIDGET EMBED ENDPOINT ============
+@router.get("/embed/{api_key}", response_class=HTMLResponse)
+async def widget_embed(
+    request: Request,
+    api_key: str,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Embeddable chat widget for external websites"""
+    tenant = await get_tenant_by_api_key(session=session, api_key=api_key)
+    if not tenant:
+        return HTMLResponse('<div style="color:red;">Invalid API Key</div>')
+    
+    base_url = str(request.base_url).rstrip('/')
+    
+    return templates.TemplateResponse(
+        "embed_widget.html",
+        {"request": request, "tenant": tenant, "api_key": api_key, "base_url": base_url}
+    )
+
+
+@router.post("/embed/chat", response_class=HTMLResponse)
+async def widget_chat(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Handle widget chat messages"""
+    form = await request.form()
+    api_key = form.get("api_key", "").strip()
+    message = form.get("message", "").strip()
+    session_id = form.get("session_id", "").strip()
+    
+    tenant = await get_tenant_by_api_key(session=session, api_key=api_key)
+    if not tenant:
+        return HTMLResponse('<div class="widget-error">Invalid configuration</div>')
+    
+    from app.services.chat_service import process_message
+    
+    try:
+        response = await process_message(
+            session=session,
+            tenant_id=tenant.id,
+            channel="widget",
+            sender_id=session_id or f"widget_{secrets.token_hex(8)}",
+            message_text=message,
+        )
+        return HTMLResponse(f'<div class="bot-message">{response}</div>')
+    except Exception as e:
+        return HTMLResponse(f'<div class="widget-error">Error: {str(e)}</div>')

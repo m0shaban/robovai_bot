@@ -1,34 +1,43 @@
 {% if error %}
-<div class="text-sm text-rose-400 p-3 bg-rose-900/20 rounded border border-rose-700">{{ error }}</div>
-{% else %}
-<table class="w-full text-sm text-slate-200 border border-slate-800 rounded-xl overflow-hidden">
-  <thead class="bg-slate-900 text-slate-400">
-    <tr>
-      <th class="px-3 py-2 text-left">ID</th>
-      <th class="px-3 py-2 text-left">Lead ID</th>
-      <th class="px-3 py-2 text-left">Sender</th>
-      <th class="px-3 py-2 text-left">Message</th>
-      <th class="px-3 py-2 text-left">Timestamp</th>
-    </tr>
-  </thead>
-  <tbody>
+<div class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm">
+    ⚠️ {{ error }}
+</div>
+{% elif logs %}
+<div class="space-y-3 max-h-[600px] overflow-y-auto">
     {% for log in logs %}
-    <tr class="border-t border-slate-800 hover:bg-slate-900/60">
-      <td class="px-3 py-2">{{ log.id }}</td>
-      <td class="px-3 py-2">{{ log.lead_id }}</td>
-      <td class="px-3 py-2">
-        {% if log.sender_type == 'customer' %}
-        <span class="text-xs px-2 py-1 rounded bg-blue-700 text-white">Customer</span>
-        {% else %}
-        <span class="text-xs px-2 py-1 rounded bg-emerald-700 text-white">Bot</span>
-        {% endif %}
-      </td>
-      <td class="px-3 py-2 text-xs truncate max-w-md">{{ log.message }}</td>
-      <td class="px-3 py-2 text-xs">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else "—" }}</td>
-    </tr>
-    {% else %}
-    <tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">No chat logs yet.</td></tr>
+    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-1 rounded text-xs
+                    {% if log.channel == 'telegram' %}bg-blue-500/20 text-blue-400
+                    {% elif log.channel == 'whatsapp' %}bg-green-500/20 text-green-400
+                    {% elif log.channel == 'widget' %}bg-purple-500/20 text-purple-400
+                    {% elif log.channel == 'test' %}bg-yellow-500/20 text-yellow-400
+                    {% else %}bg-slate-600/20 text-slate-400{% endif %}">
+                    {{ log.channel }}
+                </span>
+                <span class="text-xs text-slate-500">{{ log.sender_id[:15] }}...</span>
+            </div>
+            <span class="text-xs text-slate-500">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '' }}</span>
+        </div>
+        
+        <div class="space-y-2">
+            <div class="flex gap-2">
+                <span class="text-cyan-400 text-xs font-semibold">👤 المستخدم:</span>
+                <p class="text-sm text-slate-300 flex-1">{{ log.user_message[:150] }}{% if log.user_message|length > 150 %}...{% endif %}</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="text-indigo-400 text-xs font-semibold">🤖 البوت:</span>
+                <p class="text-sm text-slate-400 flex-1">{{ log.bot_response[:150] if log.bot_response else '-' }}{% if log.bot_response and log.bot_response|length > 150 %}...{% endif %}</p>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-  </tbody>
-</table>
+</div>
+{% else %}
+<div class="text-center py-12 text-slate-400">
+    <div class="text-5xl mb-4">💬</div>
+    <p>لا توجد محادثات بعد</p>
+    <p class="text-sm mt-1">ستظهر هنا جميع المحادثات مع العملاء</p>
+</div>
 {% endif %}
