@@ -47,10 +47,16 @@ from app.crud.scripted_response import (
 from app.crud.lead import list_leads
 from app.crud.chat_log import list_chat_logs_for_tenant
 from app.crud.stats import get_dashboard_stats, get_messages_per_day, get_recent_activity
+from app.crud.message_template import (
+    create_message_template,
+    delete_message_template,
+    list_message_templates,
+    seed_default_templates,
+)
 
 # Templates directory (app/templates)
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 router = APIRouter(prefix="/ui", tags=["ui"])
 
@@ -72,7 +78,7 @@ async def ui_root(
     """Show onboarding for first-time users, otherwise go to dashboard"""
     tenants = await list_tenants(session=session)
     if not tenants:
-        return templates.TemplateResponse("onboarding.html", {"request": request})
+        return jinja_templates.TemplateResponse("onboarding.html", {"request": request})
     return RedirectResponse(url="/ui/dashboard", status_code=status.HTTP_302_FOUND)
 
 
@@ -94,7 +100,7 @@ async def dashboard_page(
     # Calculate max for chart scaling
     max_count = max((d["count"] for d in chart_data), default=1)
     
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "dashboard.html",
         {
             "request": request,
@@ -115,7 +121,7 @@ async def tenants_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "tenants.html",
         {"request": request, "tenants": tenants, "admin_protected": admin_auth_enabled()},
     )
@@ -127,7 +133,7 @@ async def tenants_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_tenant_rows.html",
         {"request": request, "tenants": tenants},
     )
@@ -158,7 +164,7 @@ async def create_tenant_web(
         branding_config={},
     )
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_tenant_rows.html", {"request": request, "tenants": tenants}, status_code=status.HTTP_201_CREATED
     )
 
@@ -177,7 +183,7 @@ async def rotate_tenant_key(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     await rotate_tenant_api_key(session=session, tenant=tenant, new_api_key=secrets.token_urlsafe(32))
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_tenant_rows.html", {"request": request, "tenants": tenants}, status_code=status.HTTP_200_OK
     )
 
@@ -201,7 +207,7 @@ async def update_tenant_web(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     await update_tenant_name(session=session, tenant=tenant, name=name)
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_tenant_rows.html", {"request": request, "tenants": tenants}, status_code=status.HTTP_200_OK
     )
 
@@ -220,7 +226,7 @@ async def delete_tenant_web(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     await delete_tenant(session=session, tenant=tenant)
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_tenant_rows.html", {"request": request, "tenants": tenants}, status_code=status.HTTP_200_OK
     )
 
@@ -232,7 +238,7 @@ async def channels_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("channels.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("channels.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/channels/rows", response_class=HTMLResponse)
@@ -242,16 +248,16 @@ async def channels_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_channel_rows.html", {"request": request, "channels": [], "error": "اختر مشروعاً أولاً"}
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
 
 
 @router.post("/channels", response_class=HTMLResponse)
@@ -268,13 +274,13 @@ async def create_channel_web(
     is_active = form.get("is_active", "true").lower() == "true"
     
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API مطلوب"}
         )
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -288,7 +294,7 @@ async def create_channel_web(
         is_active=is_active,
     )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
@@ -304,7 +310,7 @@ async def delete_channel_web(
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_channel_rows.html", {"request": request, "channels": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -313,7 +319,7 @@ async def delete_channel_web(
         await delete_integration(session=session, integration=channel)
     
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
 
 
 # ============ QUICK REPLIES ============
@@ -323,7 +329,7 @@ async def quick_replies_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("quick_replies.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("quick_replies.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/quick-replies/rows", response_class=HTMLResponse)
@@ -333,16 +339,16 @@ async def quick_replies_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_quick_reply_rows.html", {"request": request, "replies": [], "error": "اختر مشروعاً أولاً"}
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
 
 
 @router.post("/quick-replies", response_class=HTMLResponse)
@@ -358,13 +364,13 @@ async def create_quick_reply_web(
     is_active = form.get("is_active", "true").lower() == "true"
     
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API مطلوب"}
         )
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -377,7 +383,7 @@ async def create_quick_reply_web(
         is_active=is_active,
     )
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
@@ -393,7 +399,7 @@ async def delete_quick_reply_web(
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_quick_reply_rows.html", {"request": request, "replies": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -402,7 +408,7 @@ async def delete_quick_reply_web(
         await delete_quick_reply(session=session, quick_reply=reply)
     
     replies = await list_quick_replies_for_tenant(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
 
 
 # ============ RULES (Scripted Responses) ============
@@ -412,7 +418,7 @@ async def rules_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("rules.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("rules.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/rules/rows", response_class=HTMLResponse)
@@ -422,16 +428,16 @@ async def rules_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_rule_rows.html", {"request": request, "rules": [], "error": "اختر مشروعاً أولاً"}
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
 
 
 @router.post("/rules", response_class=HTMLResponse)
@@ -446,13 +452,13 @@ async def create_rule_web(
     is_active = form.get("is_active", "true").lower() == "true"
     
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API مطلوب"}
         )
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -464,7 +470,7 @@ async def create_rule_web(
         is_active=is_active,
     )
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant}, status_code=status.HTTP_201_CREATED
     )
 
@@ -480,7 +486,7 @@ async def delete_rule_web(
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_rule_rows.html", {"request": request, "rules": [], "error": "مفتاح API غير صالح"}
         )
     
@@ -489,7 +495,7 @@ async def delete_rule_web(
         await delete_scripted_response(session=session, scripted_response=rule)
     
     rules = await list_active_scripted_responses(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
 
 
 # ============ LEADS ============
@@ -499,7 +505,7 @@ async def leads_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("leads.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("leads.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/leads/rows", response_class=HTMLResponse)
@@ -509,16 +515,16 @@ async def leads_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_lead_rows.html", {"request": request, "leads": [], "error": "اختر مشروعاً أولاً"}
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_lead_rows.html", {"request": request, "leads": [], "error": "مفتاح API غير صالح"}
         )
     leads = await list_leads(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse("_lead_rows.html", {"request": request, "leads": leads, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_lead_rows.html", {"request": request, "leads": leads, "tenant": tenant})
 
 
 # ============ CHAT LOGS ============
@@ -528,7 +534,7 @@ async def chatlogs_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("chatlogs.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("chatlogs.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/chatlogs/rows", response_class=HTMLResponse)
@@ -538,16 +544,16 @@ async def chatlogs_rows(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_chatlog_rows.html", {"request": request, "logs": [], "error": "اختر مشروعاً أولاً"}
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_chatlog_rows.html", {"request": request, "logs": [], "error": "مفتاح API غير صالح"}
         )
     logs = await list_chat_logs_for_tenant(session=session, tenant_id=tenant.id, limit=200)
-    return templates.TemplateResponse("_chatlog_rows.html", {"request": request, "logs": logs, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_chatlog_rows.html", {"request": request, "logs": logs, "tenant": tenant})
 
 
 # ============ SETTINGS ============
@@ -557,7 +563,7 @@ async def settings_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/settings/data", response_class=HTMLResponse)
@@ -567,17 +573,17 @@ async def settings_data(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "اختر مشروعاً أولاً"},
         )
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
-    return templates.TemplateResponse("_settings_form.html", {"request": request, "tenant": tenant})
+    return jinja_templates.TemplateResponse("_settings_form.html", {"request": request, "tenant": tenant})
 
 
 @router.post("/settings/update", response_class=HTMLResponse)
@@ -591,14 +597,14 @@ async def update_settings_web(
     webhook_url = form.get("webhook_url", "").strip()
     
     if not tenant_api_key:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "مفتاح API مطلوب"},
         )
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
@@ -610,7 +616,7 @@ async def update_settings_web(
         webhook_url=webhook_url or None,
     )
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant.id)
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_settings_form.html",
         {"request": request, "tenant": tenant, "success": "تم حفظ الإعدادات بنجاح ✓"},
     )
@@ -623,7 +629,7 @@ async def test_chat_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("test_chat.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("test_chat.html", {"request": request, "tenants": tenants})
 
 
 @router.post("/test-chat/send", response_class=HTMLResponse)
@@ -660,7 +666,7 @@ async def send_test_message(
             message_text=message,
         )
         
-        return templates.TemplateResponse(
+        return jinja_templates.TemplateResponse(
             "_chat_message.html",
             {
                 "request": request,
@@ -682,7 +688,7 @@ async def widget_page(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     tenants = await list_tenants(session=session)
-    return templates.TemplateResponse("widget.html", {"request": request, "tenants": tenants})
+    return jinja_templates.TemplateResponse("widget.html", {"request": request, "tenants": tenants})
 
 
 @router.get("/widget/generate", response_class=HTMLResponse)
@@ -701,7 +707,7 @@ async def generate_widget_code(
     # Get base URL from request
     base_url = str(request.base_url).rstrip('/')
     
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "_widget_code.html",
         {"request": request, "tenant": tenant, "api_key": tenant_api_key, "base_url": base_url}
     )
@@ -721,7 +727,7 @@ async def widget_embed(
     
     base_url = str(request.base_url).rstrip('/')
     
-    return templates.TemplateResponse(
+    return jinja_templates.TemplateResponse(
         "embed_widget.html",
         {"request": request, "tenant": tenant, "api_key": api_key, "base_url": base_url}
     )
@@ -755,3 +761,105 @@ async def widget_chat(
         return HTMLResponse(f'<div class="bot-message">{response}</div>')
     except Exception as e:
         return HTMLResponse(f'<div class="widget-error">Error: {str(e)}</div>')
+
+
+# ============ MESSAGE TEMPLATES ============
+@router.get("/templates", response_class=HTMLResponse)
+async def templates_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Message templates management page"""
+    tenants = await list_tenants(session=session)
+    return jinja_templates.TemplateResponse(
+        "templates.html",
+        {"request": request, "tenants": tenants},
+    )
+
+
+@router.get("/templates/list", response_class=HTMLResponse)
+async def templates_list(
+    request: Request,
+    tenant_id: int,
+    category: str | None = None,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """List templates for a tenant"""
+    msg_templates = await list_message_templates(
+        session=session,
+        tenant_id=tenant_id,
+        category=category,
+    )
+    return jinja_templates.TemplateResponse(
+        "_template_rows.html",
+        {"request": request, "templates": msg_templates},
+    )
+
+
+@router.post("/templates/add", response_class=HTMLResponse)
+async def templates_add(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Add a new message template"""
+    form = await request.form()
+    tenant_id = int(form.get("tenant_id", 0))
+    name = form.get("name", "").strip()
+    category = form.get("category", "general").strip()
+    content = form.get("content", "").strip()
+    variables = form.get("variables", "").strip() or None
+    
+    if tenant_id and name and content:
+        await create_message_template(
+            session=session,
+            tenant_id=tenant_id,
+            name=name,
+            category=category,
+            content=content,
+            variables=variables,
+        )
+    
+    msg_templates = await list_message_templates(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_template_rows.html",
+        {"request": request, "templates": msg_templates},
+    )
+
+
+@router.post("/templates/delete", response_class=HTMLResponse)
+async def templates_delete(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Delete a message template"""
+    form = await request.form()
+    template_id = int(form.get("template_id", 0))
+    tenant_id = int(form.get("tenant_id", 0))
+    
+    if template_id:
+        await delete_message_template(session=session, template_id=template_id)
+    
+    msg_templates = await list_message_templates(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_template_rows.html",
+        {"request": request, "templates": msg_templates},
+    )
+
+
+@router.post("/templates/seed", response_class=HTMLResponse)
+async def templates_seed(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    """Seed default templates for a tenant"""
+    form = await request.form()
+    tenant_id = int(form.get("tenant_id", 0))
+    
+    if tenant_id:
+        await seed_default_templates(session=session, tenant_id=tenant_id)
+    
+    msg_templates = await list_message_templates(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_template_rows.html",
+        {"request": request, "templates": msg_templates},
+    )

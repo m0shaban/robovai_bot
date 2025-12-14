@@ -52,4 +52,11 @@ class Tenant(Base):
         passive_deletes=True,
     )
 
+    message_templates = relationship(
+        "MessageTemplate",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     __table_args__ = (Index("ix_tenants_name", "name"),)

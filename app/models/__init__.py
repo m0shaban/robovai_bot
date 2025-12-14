@@ -5,6 +5,7 @@ from app.models.lead import Lead
 from app.models.quick_reply import QuickReply
 from app.models.scripted_response import ScriptedResponse
 from app.models.tenant import Tenant
+from app.models.message_template import MessageTemplate, TemplateCategory
 
 __all__ = [
     "Base",
@@ -16,4 +17,6 @@ __all__ = [
     "Lead",
     "ChatLog",
     "SenderType",
+    "MessageTemplate",
+    "TemplateCategory",
 ]

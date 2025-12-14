@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}قوالب الرسائل - RoboVAI{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6 fade-in">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-50">📝 قوالب الرسائل</h1>
+                    <p class="text-slate-400 text-sm mt-1">رسائل جاهزة للاستخدام السريع</p>
+                </div>
+            </div>
+
+            <!-- Tenant & Category Selector -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="label">اختر المشروع</label>
+                    <select id="tenant_select" class="select-field" onchange="loadTemplates()">
+                        <option value="">-- اختر مشروعاً --</option>
+                        {% for tenant in tenants %}
+                        <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label">التصنيف</label>
+                    <select id="category_filter" class="select-field" onchange="loadTemplates()">
+                        <option value="">جميع التصنيفات</option>
+                        <option value="welcome">👋 ترحيب</option>
+                        <option value="farewell">👋 وداع</option>
+                        <option value="complaint">😔 شكاوى</option>
+                        <option value="inquiry">❓ استفسارات</option>
+                        <option value="promotion">🎉 عروض</option>
+                        <option value="support">🔧 دعم فني</option>
+                        <option value="payment">💳 دفع</option>
+                        <option value="shipping">📦 شحن</option>
+                        <option value="general">📋 عام</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Templates List -->
+            <div id="templates-list">
+                <div class="text-center py-12 text-slate-400">
+                    <div class="text-5xl mb-4">📝</div>
+                    <p>اختر مشروعاً لعرض القوالب</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <!-- Add New Template -->
+        <div class="glass-card p-6">
+            <h3 class="font-semibold text-slate-50 mb-4">➕ إضافة قالب جديد</h3>
+            <form id="add-template-form" onsubmit="addTemplate(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="label">اسم القالب</label>
+                        <input type="text" id="new_name" class="input-field" placeholder="مثال: ترحيب عام" required>
+                    </div>
+                    <div>
+                        <label class="label">التصنيف</label>
+                        <select id="new_category" class="select-field" required>
+                            <option value="welcome">👋 ترحيب</option>
+                            <option value="farewell">👋 وداع</option>
+                            <option value="complaint">😔 شكاوى</option>
+                            <option value="inquiry">❓ استفسارات</option>
+                            <option value="promotion">🎉 عروض</option>
+                            <option value="support">🔧 دعم فني</option>
+                            <option value="payment">💳 دفع</option>
+                            <option value="shipping">📦 شحن</option>
+                            <option value="general" selected>📋 عام</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">محتوى الرسالة</label>
+                        <textarea id="new_content" class="input-field" rows="4" placeholder="اكتب نص الرسالة هنا..." required></textarea>
+                        <p class="text-xs text-slate-500 mt-1">يمكنك استخدام متغيرات مثل {customer_name}</p>
+                    </div>
+                    <div>
+                        <label class="label">المتغيرات (اختياري)</label>
+                        <input type="text" id="new_variables" class="input-field" placeholder="customer_name,order_id">
+                        <p class="text-xs text-slate-500 mt-1">افصل بين المتغيرات بفاصلة</p>
+                    </div>
+                    <button type="submit" class="btn-primary w-full" id="add-btn">
+                        ➕ إضافة القالب
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="glass-card p-6">
+            <h3 class="font-semibold text-slate-50 mb-4">⚡ إجراءات سريعة</h3>
+            <div class="space-y-3">
+                <button onclick="seedDefaultTemplates()" class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all text-sm font-medium">
+                    🎁 إضافة قوالب افتراضية
+                </button>
+                <p class="text-xs text-slate-400 text-center">
+                    يضيف 13 قالب جاهز للاستخدام
+                </p>
+            </div>
+        </div>
+
+        <!-- Categories Info -->
+        <div class="glass-card p-6">
+            <h3 class="font-semibold text-slate-50 mb-4">📚 دليل التصنيفات</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>👋</span> <strong>ترحيب:</strong> رسائل الاستقبال
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>😔</span> <strong>شكاوى:</strong> التعامل مع المشاكل
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>🎉</span> <strong>عروض:</strong> العروض والخصومات
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>🔧</span> <strong>دعم:</strong> المساعدة التقنية
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>💳</span> <strong>دفع:</strong> المعاملات المالية
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                    <span>📦</span> <strong>شحن:</strong> التوصيل والتتبع
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadTemplates() {
+    const tenantId = document.getElementById('tenant_select').value;
+    const category = document.getElementById('category_filter').value;
+    
+    if (!tenantId) {
+        document.getElementById('templates-list').innerHTML = `
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">📝</div>
+                <p>اختر مشروعاً لعرض القوالب</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let url = '/ui/templates/list?tenant_id=' + tenantId;
+    if (category) url += '&category=' + category;
+    
+    htmx.ajax('GET', url, {target: '#templates-list'});
+}
+
+function addTemplate(e) {
+    e.preventDefault();
+    
+    const tenantId = document.getElementById('tenant_select').value;
+    if (!tenantId) {
+        alert('الرجاء اختيار مشروع أولاً');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('tenant_id', tenantId);
+    formData.append('name', document.getElementById('new_name').value);
+    formData.append('category', document.getElementById('new_category').value);
+    formData.append('content', document.getElementById('new_content').value);
+    formData.append('variables', document.getElementById('new_variables').value);
+    
+    fetch('/ui/templates/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('templates-list').innerHTML = html;
+        document.getElementById('add-template-form').reset();
+    });
+}
+
+function copyTemplate(content) {
+    navigator.clipboard.writeText(content).then(() => {
+        // Show toast
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 left-4 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg slide-in z-50';
+        toast.innerHTML = '✅ تم نسخ القالب!';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    });
+}
+
+function deleteTemplate(templateId) {
+    if (!confirm('هل أنت متأكد من حذف هذا القالب؟')) return;
+    
+    const tenantId = document.getElementById('tenant_select').value;
+    
+    fetch('/ui/templates/delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'template_id=' + templateId + '&tenant_id=' + tenantId
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('templates-list').innerHTML = html;
+    });
+}
+
+function seedDefaultTemplates() {
+    const tenantId = document.getElementById('tenant_select').value;
+    if (!tenantId) {
+        alert('الرجاء اختيار مشروع أولاً');
+        return;
+    }
+    
+    if (!confirm('سيتم إضافة 13 قالب افتراضي. متابعة؟')) return;
+    
+    fetch('/ui/templates/seed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'tenant_id=' + tenantId
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('templates-list').innerHTML = html;
+    });
+}
+</script>
+{% endblock %}
