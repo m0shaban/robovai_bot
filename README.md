@@ -1,6 +1,8 @@
-# RoboVAI Solutions - شريكك في التحول الرقمي
+# RoboVAI Bot Platform
 
-**[RoboVAI Solutions](https://robovai.blogspot.com/)** is a modern AI-powered chatbot platform designed to automate customer service and drive digital transformation.
+**Powered by [RoboVAI Solutions](https://robovai.blogspot.com/) - Your Partner in Digital Transformation**
+
+**RoboVAI Bot** is a modern AI-powered chatbot platform designed to automate customer service and drive digital transformation. It is one of the flagship products of RoboVAI Solutions.
 
 > **Created with love ❤️ by Eng. Mohamed Shaban**
 
