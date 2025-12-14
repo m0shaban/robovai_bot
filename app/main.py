@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.api.v1.api import api_router
 from app.api.health import router as health_router
@@ -35,6 +37,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="RoboVAI Multi-Tenant Chatbot", lifespan=lifespan)
+
+# Mount static files
+static_path = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 # Root redirect to UI Landing Page
 from fastapi.responses import RedirectResponse
