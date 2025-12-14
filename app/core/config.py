@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +14,14 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/robovai",
         validation_alias="DATABASE_URL",
     )
+
+    @field_validator("database_url")
+    @classmethod
+    def convert_postgres_url(cls, v: str) -> str:
+        """Convert postgresql:// to postgresql+asyncpg:// for Render compatibility"""
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     # Security / Admin (for future hardening)
     secret_key: str = Field(default="change-me", validation_alias="SECRET_KEY")
