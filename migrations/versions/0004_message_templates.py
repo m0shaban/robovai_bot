@@ -7,6 +7,7 @@ Create Date: 2024-12-14
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -17,13 +18,26 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create template_category enum
-    template_category = sa.Enum(
-        'welcome', 'farewell', 'complaint', 'inquiry', 'promotion',
-        'support', 'payment', 'shipping', 'general',
-        name='template_category'
-    )
-    template_category.create(op.get_bind(), checkfirst=True)
+    # Check if table already exists (in case of partial migration)
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    
+    if 'message_templates' in inspector.get_table_names():
+        # Table already exists, skip
+        return
+    
+    # Create template_category enum only if it doesn't exist
+    # Using raw SQL for better control
+    conn.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE template_category AS ENUM (
+                'welcome', 'farewell', 'complaint', 'inquiry', 'promotion',
+                'support', 'payment', 'shipping', 'general'
+            );
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """))
     
     # Create message_templates table
     op.create_table(
@@ -31,7 +45,10 @@ def upgrade() -> None:
         sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column('tenant_id', sa.BigInteger(), nullable=False),
         sa.Column('name', sa.String(255), nullable=False),
-        sa.Column('category', template_category, nullable=False, server_default='general'),
+        sa.Column('category', postgresql.ENUM('welcome', 'farewell', 'complaint', 'inquiry', 'promotion',
+                                               'support', 'payment', 'shipping', 'general',
+                                               name='template_category', create_type=False), 
+                  nullable=False, server_default='general'),
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('variables', sa.Text(), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
@@ -51,4 +68,4 @@ def downgrade() -> None:
     op.drop_table('message_templates')
     
     # Drop the enum type
-    sa.Enum(name='template_category').drop(op.get_bind(), checkfirst=True)
+    op.execute('DROP TYPE IF EXISTS template_category')
