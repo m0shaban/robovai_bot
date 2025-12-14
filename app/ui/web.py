@@ -638,6 +638,10 @@ async def settings_full(
             "_settings_form.html",
             {"request": request, "tenant": None},
         )
+
+    integrations = await list_integrations_for_tenant(
+        session=session, tenant_id=tenant.id
+    )
     
     ai_ctx = await _settings_ai_context(request)
 
@@ -646,6 +650,7 @@ async def settings_full(
         {
             "request": request,
             "tenant": tenant,
+            "integrations": integrations,
             **ai_ctx,
         },
     )
@@ -668,6 +673,10 @@ async def settings_data(
             "_settings_form.html",
             {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
+
+    integrations = await list_integrations_for_tenant(
+        session=session, tenant_id=tenant.id
+    )
     
     ai_ctx = await _settings_ai_context(request)
 
@@ -676,6 +685,7 @@ async def settings_data(
         {
             "request": request, 
             "tenant": tenant,
+            "integrations": integrations,
             **ai_ctx,
         }
     )
@@ -710,7 +720,13 @@ async def update_settings_web(
         system_prompt=system_prompt or None,
         webhook_url=webhook_url or None,
     )
-    tenant = await get_tenant_by_id(session=session, tenant_id=tenant.id)
+    refreshed = await get_tenant_by_id(session=session, tenant_id=tenant.id)
+    if refreshed is not None:
+        tenant = refreshed
+
+    integrations = await list_integrations_for_tenant(
+        session=session, tenant_id=tenant.id
+    )
 
     ai_ctx = await _settings_ai_context(request)
     return jinja_templates.TemplateResponse(
@@ -718,6 +734,7 @@ async def update_settings_web(
         {
             "request": request,
             "tenant": tenant,
+            "integrations": integrations,
             "success": "تم حفظ الإعدادات بنجاح ✓",
             **ai_ctx,
         },

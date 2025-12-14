@@ -99,45 +99,59 @@
         <div class="glass-card p-6">
             <h3 class="text-lg font-semibold text-slate-50 mb-4">🔗 روابط Webhook</h3>
             <p class="text-sm text-slate-400 mb-4">استخدم هذه الروابط لربط قنوات التواصل</p>
+
+            {% set _integrations = integrations|default([]) %}
+            {% set telegram_integ = (_integrations|selectattr('channel_type','equalto','telegram')|list|first) %}
+            {% set meta_integrations = _integrations|selectattr('channel_type','in',['whatsapp','messenger','instagram'])|list %}
             
             <div class="space-y-4">
-                <!-- Main Webhook -->
-                <div>
-                    <label class="text-xs text-slate-400 block mb-1">📡 Webhook الرئيسي (لجميع القنوات)</label>
-                    <div class="flex gap-2">
-                        <input type="text" readonly value="{{ base_url }}/api/webhooks/unified?api_key={{ tenant.api_key }}" 
-                            class="input-field text-xs flex-1 bg-slate-900" id="main-webhook" />
-                        <button onclick="copyToClipboard(document.getElementById('main-webhook').value, this)" 
-                            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm">
-                            📋 نسخ
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Telegram Webhook -->
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">📱 Telegram Webhook</label>
                     <div class="flex gap-2">
-                        <input type="text" readonly value="{{ base_url }}/api/webhooks/telegram/{{ tenant.api_key }}" 
+                        <input type="text" readonly value="{% if telegram_integ %}{{ base_url }}/webhooks/telegram/{{ telegram_integ.verify_token }}{% else %}(أنشئ تكامل Telegram أولاً من صفحة القنوات){% endif %}" 
                             class="input-field text-xs flex-1 bg-slate-900" id="telegram-webhook" />
                         <button onclick="copyToClipboard(document.getElementById('telegram-webhook').value, this)" 
                             class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm">
                             📋 نسخ
                         </button>
                     </div>
+                    {% if telegram_integ %}
+                    <p class="text-xs text-slate-500 mt-2">ضع هذا الرابط في Telegram عبر <code class="bg-slate-900 px-1 rounded">setWebhook</code>. يجب أن يكون الـ <code class="bg-slate-900 px-1 rounded">verify_token</code> مطابقاً للتكامل.</p>
+                    {% endif %}
                 </div>
 
                 <!-- Meta Webhook -->
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">💬 Meta (WhatsApp/Messenger/Instagram)</label>
                     <div class="flex gap-2">
-                        <input type="text" readonly value="{{ base_url }}/api/webhooks/meta/{{ tenant.api_key }}" 
+                        <input type="text" readonly value="{{ base_url }}/webhooks/meta" 
                             class="input-field text-xs flex-1 bg-slate-900" id="meta-webhook" />
                         <button onclick="copyToClipboard(document.getElementById('meta-webhook').value, this)" 
                             class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm">
                             📋 نسخ
                         </button>
                     </div>
+
+                    {% if meta_integrations and meta_integrations|length > 0 %}
+                    <div class="mt-3 p-3 bg-slate-800/50 rounded-lg">
+                        <p class="text-xs text-slate-400 mb-2">Verify Token (ضعه في لوحة Meta عند تفعيل Webhook):</p>
+                        <div class="space-y-2">
+                            {% for integ in meta_integrations %}
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-slate-400">{{ integ.channel_type }}</span>
+                                <div class="flex items-center gap-2">
+                                    <code class="text-xs text-slate-200 break-all" id="vt-{{ integ.id }}">{{ integ.verify_token }}</code>
+                                    <button onclick="copyToClipboard(document.getElementById('vt-{{ integ.id }}').textContent, this)"
+                                        class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0">📋</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-500 mt-2">أنشئ تكامل WhatsApp/Messenger/Instagram أولاً ليظهر Verify Token هنا.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
