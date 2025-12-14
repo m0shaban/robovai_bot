@@ -9,7 +9,7 @@
 ![RoboVAI Bot Platform](https://raw.githubusercontent.com/m0shaban/robovai_bot/main/app/static/img/logo.png)
 
 <p align="center">
-	<strong>هل أعجبك المشروع؟ ادعم تطوير RoboVAI بفنجان قهوة — مساهمتك تسرّع الابتكار وتدعم الاستمرارية.</strong>
+	<strong>Love RoboVAI? Support development with a cup of coffee — your contribution accelerates new features and keeps the project alive.</strong>
 </p>
 
 <p align="center">
