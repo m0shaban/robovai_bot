@@ -6,13 +6,16 @@ from pathlib import Path
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks, Response, Body
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.security.utils import get_authorization_scheme_param
 from sqlalchemy.ext.asyncio import AsyncSession
+from jose import jwt, JWTError
 
 from app.api.deps import get_db_session
 from app.core.config import admin_auth_enabled, settings
+from app.core import security
 from app.crud.tenant import (
     create_tenant,
     delete_tenant,
@@ -63,6 +66,13 @@ from app.crud.broadcast import (
     get_broadcast,
     update_broadcast_stats,
 )
+from app.crud.flow import (
+    create_flow,
+    list_flows,
+    get_flow,
+    update_flow,
+    delete_flow,
+)
 from app.models.broadcast import BroadcastStatus
 from app.models.chat_log import SenderType
 from app.services.telegram_service import send_telegram_message
@@ -79,7 +89,42 @@ from app.crud.message_template import (
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-router = APIRouter(prefix="/ui", tags=["ui"])
+public_router = APIRouter(prefix="/ui", tags=["ui"])
+
+@public_router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return jinja_templates.TemplateResponse("login.html", {"request": request})
+
+@public_router.post("/login", response_class=HTMLResponse)
+async def login_submit(request: Request, password: str = Form(...)):
+    # In a real app, you'd hash the password in config or env var.
+    # Here we compare with the configured admin password.
+    if password != settings.admin_password:
+         return jinja_templates.TemplateResponse("login.html", {"request": request, "error": "Invalid password"})
+    
+    access_token = security.create_access_token(subject="admin")
+    response = RedirectResponse(url="/ui/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
+
+@public_router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/ui/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("access_token")
+    return response
+
+async def check_auth(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[security.ALGORITHM])
+        if payload.get("sub") != "admin":
+             raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
+
+protected_router = APIRouter(prefix="/ui", tags=["ui"], dependencies=[Depends(check_auth)])
 
 
 async def _get_ai_models() -> list[str]:
@@ -142,7 +187,7 @@ def _require_admin_password(admin_password: str) -> None:
         )
 
 
-@router.get("/")
+@protected_router.get("/")
 async def ui_root(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -155,7 +200,7 @@ async def ui_root(
 
 
 # ============ DASHBOARD ============
-@router.get("/dashboard", response_class=HTMLResponse)
+@protected_router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(
     request: Request,
     tenant_id: int | None = None,
@@ -187,7 +232,7 @@ async def dashboard_page(
 
 
 # ============ TENANTS ============
-@router.get("/tenants", response_class=HTMLResponse)
+@protected_router.get("/tenants", response_class=HTMLResponse)
 async def tenants_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -199,7 +244,7 @@ async def tenants_page(
     )
 
 
-@router.get("/tenants/rows", response_class=HTMLResponse)
+@protected_router.get("/tenants/rows", response_class=HTMLResponse)
 async def tenants_rows(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -211,7 +256,7 @@ async def tenants_rows(
     )
 
 
-@router.post("/tenants", response_class=HTMLResponse)
+@protected_router.post("/tenants", response_class=HTMLResponse)
 async def create_tenant_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -241,7 +286,7 @@ async def create_tenant_web(
     )
 
 
-@router.post("/tenants/{tenant_id}/rotate", response_class=HTMLResponse)
+@protected_router.post("/tenants/{tenant_id}/rotate", response_class=HTMLResponse)
 async def rotate_tenant_key(
     request: Request,
     tenant_id: int,
@@ -260,7 +305,7 @@ async def rotate_tenant_key(
     )
 
 
-@router.post("/tenants/{tenant_id}/update", response_class=HTMLResponse)
+@protected_router.post("/tenants/{tenant_id}/update", response_class=HTMLResponse)
 async def update_tenant_web(
     request: Request,
     tenant_id: int,
@@ -284,7 +329,7 @@ async def update_tenant_web(
     )
 
 
-@router.post("/tenants/{tenant_id}/delete", response_class=HTMLResponse)
+@protected_router.post("/tenants/{tenant_id}/delete", response_class=HTMLResponse)
 async def delete_tenant_web(
     request: Request,
     tenant_id: int,
@@ -304,7 +349,7 @@ async def delete_tenant_web(
 
 
 # ============ CHANNELS ============
-@router.get("/channels", response_class=HTMLResponse)
+@protected_router.get("/channels", response_class=HTMLResponse)
 async def channels_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -313,7 +358,7 @@ async def channels_page(
     return jinja_templates.TemplateResponse("channels.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/channels/rows", response_class=HTMLResponse)
+@protected_router.get("/channels/rows", response_class=HTMLResponse)
 async def channels_rows(
     request: Request,
     tenant_api_key: str = "",
@@ -336,7 +381,7 @@ async def channels_rows(
     )
 
 
-@router.post("/channels", response_class=HTMLResponse)
+@protected_router.post("/channels", response_class=HTMLResponse)
 async def create_channel_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -378,7 +423,7 @@ async def create_channel_web(
     )
 
 
-@router.post("/channels/{channel_id}/delete", response_class=HTMLResponse)
+@protected_router.post("/channels/{channel_id}/delete", response_class=HTMLResponse)
 async def delete_channel_web(
     request: Request,
     channel_id: int,
@@ -406,7 +451,7 @@ async def delete_channel_web(
 
 
 # ============ QUICK REPLIES ============
-@router.get("/quick-replies", response_class=HTMLResponse)
+@protected_router.get("/quick-replies", response_class=HTMLResponse)
 async def quick_replies_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -415,7 +460,7 @@ async def quick_replies_page(
     return jinja_templates.TemplateResponse("quick_replies.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/quick-replies/rows", response_class=HTMLResponse)
+@protected_router.get("/quick-replies/rows", response_class=HTMLResponse)
 async def quick_replies_rows(
     request: Request,
     tenant_api_key: str = "",
@@ -434,7 +479,7 @@ async def quick_replies_rows(
     return jinja_templates.TemplateResponse("_quick_reply_rows.html", {"request": request, "replies": replies, "tenant": tenant})
 
 
-@router.post("/quick-replies", response_class=HTMLResponse)
+@protected_router.post("/quick-replies", response_class=HTMLResponse)
 async def create_quick_reply_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -471,7 +516,7 @@ async def create_quick_reply_web(
     )
 
 
-@router.post("/quick-replies/{reply_id}/delete", response_class=HTMLResponse)
+@protected_router.post("/quick-replies/{reply_id}/delete", response_class=HTMLResponse)
 async def delete_quick_reply_web(
     request: Request,
     reply_id: int,
@@ -495,7 +540,7 @@ async def delete_quick_reply_web(
 
 
 # ============ RULES (Scripted Responses) ============
-@router.get("/rules", response_class=HTMLResponse)
+@protected_router.get("/rules", response_class=HTMLResponse)
 async def rules_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -504,7 +549,7 @@ async def rules_page(
     return jinja_templates.TemplateResponse("rules.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/rules/rows", response_class=HTMLResponse)
+@protected_router.get("/rules/rows", response_class=HTMLResponse)
 async def rules_rows(
     request: Request,
     tenant_api_key: str = "",
@@ -523,7 +568,7 @@ async def rules_rows(
     return jinja_templates.TemplateResponse("_rule_rows.html", {"request": request, "rules": rules, "tenant": tenant})
 
 
-@router.post("/rules", response_class=HTMLResponse)
+@protected_router.post("/rules", response_class=HTMLResponse)
 async def create_rule_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -558,7 +603,7 @@ async def create_rule_web(
     )
 
 
-@router.post("/rules/{rule_id}/delete", response_class=HTMLResponse)
+@protected_router.post("/rules/{rule_id}/delete", response_class=HTMLResponse)
 async def delete_rule_web(
     request: Request,
     rule_id: int,
@@ -582,7 +627,7 @@ async def delete_rule_web(
 
 
 # ============ LEADS ============
-@router.get("/leads", response_class=HTMLResponse)
+@protected_router.get("/leads", response_class=HTMLResponse)
 async def leads_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -591,7 +636,7 @@ async def leads_page(
     return jinja_templates.TemplateResponse("leads.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/leads/rows", response_class=HTMLResponse)
+@protected_router.get("/leads/rows", response_class=HTMLResponse)
 async def leads_rows(
     request: Request,
     tenant_api_key: str = "",
@@ -611,7 +656,7 @@ async def leads_rows(
 
 
 # ============ CHAT LOGS ============
-@router.get("/chatlogs", response_class=HTMLResponse)
+@protected_router.get("/chatlogs", response_class=HTMLResponse)
 async def chatlogs_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -620,7 +665,7 @@ async def chatlogs_page(
     return jinja_templates.TemplateResponse("chatlogs.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/chatlogs/rows", response_class=HTMLResponse)
+@protected_router.get("/chatlogs/rows", response_class=HTMLResponse)
 async def chatlogs_rows(
     request: Request,
     tenant_api_key: str = "",
@@ -640,7 +685,7 @@ async def chatlogs_rows(
 
 
 # ============ SETTINGS ============
-@router.get("/settings", response_class=HTMLResponse)
+@protected_router.get("/settings", response_class=HTMLResponse)
 async def settings_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -650,7 +695,7 @@ async def settings_page(
     return jinja_templates.TemplateResponse("settings.html", {"request": request, "tenants": tenants, "base_url": base_url})
 
 
-@router.get("/settings/full", response_class=HTMLResponse)
+@protected_router.get("/settings/full", response_class=HTMLResponse)
 async def settings_full(
     request: Request,
     tenant_api_key: str = "",
@@ -687,7 +732,7 @@ async def settings_full(
     )
 
 
-@router.get("/settings/data", response_class=HTMLResponse)
+@protected_router.get("/settings/data", response_class=HTMLResponse)
 async def settings_data(
     request: Request,
     tenant_api_key: str = "",
@@ -722,7 +767,7 @@ async def settings_data(
     )
 
 
-@router.post("/settings/update", response_class=HTMLResponse)
+@protected_router.post("/settings/update", response_class=HTMLResponse)
 async def update_settings_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -773,7 +818,7 @@ async def update_settings_web(
 
 
 # ============ TEST CHAT ============
-@router.get("/test-chat", response_class=HTMLResponse)
+@protected_router.get("/test-chat", response_class=HTMLResponse)
 async def test_chat_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -782,7 +827,7 @@ async def test_chat_page(
     return jinja_templates.TemplateResponse("test_chat.html", {"request": request, "tenants": tenants})
 
 
-@router.post("/test-chat/send", response_class=HTMLResponse)
+@protected_router.post("/test-chat/send", response_class=HTMLResponse)
 async def send_test_message(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -825,7 +870,7 @@ async def send_test_message(
 
 
 # ============ WIDGET GENERATOR ============
-@router.get("/widget", response_class=HTMLResponse)
+@protected_router.get("/widget", response_class=HTMLResponse)
 async def widget_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -834,7 +879,7 @@ async def widget_page(
     return jinja_templates.TemplateResponse("widget.html", {"request": request, "tenants": tenants})
 
 
-@router.get("/widget/generate", response_class=HTMLResponse)
+@protected_router.get("/widget/generate", response_class=HTMLResponse)
 async def generate_widget_code(
     request: Request,
     tenant_api_key: str = "",
@@ -857,7 +902,7 @@ async def generate_widget_code(
 
 
 # ============ WIDGET EMBED ENDPOINT ============
-@router.get("/embed/{api_key}", response_class=HTMLResponse)
+@protected_router.get("/embed/{api_key}", response_class=HTMLResponse)
 async def widget_embed(
     request: Request,
     api_key: str,
@@ -876,7 +921,7 @@ async def widget_embed(
     )
 
 
-@router.post("/embed/chat", response_class=HTMLResponse)
+@protected_router.post("/embed/chat", response_class=HTMLResponse)
 async def widget_chat(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -902,7 +947,7 @@ async def widget_chat(
 
 
 # ============ MESSAGE TEMPLATES ============
-@router.get("/templates", response_class=HTMLResponse)
+@protected_router.get("/templates", response_class=HTMLResponse)
 async def templates_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -915,7 +960,7 @@ async def templates_page(
     )
 
 
-@router.get("/templates/list", response_class=HTMLResponse)
+@protected_router.get("/templates/list", response_class=HTMLResponse)
 async def templates_list(
     request: Request,
     tenant_id: int,
@@ -934,7 +979,7 @@ async def templates_list(
     )
 
 
-@router.post("/templates/add", response_class=HTMLResponse)
+@protected_router.post("/templates/add", response_class=HTMLResponse)
 async def templates_add(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -964,7 +1009,7 @@ async def templates_add(
     )
 
 
-@router.post("/templates/delete", response_class=HTMLResponse)
+@protected_router.post("/templates/delete", response_class=HTMLResponse)
 async def templates_delete(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -984,7 +1029,7 @@ async def templates_delete(
     )
 
 
-@router.post("/templates/seed", response_class=HTMLResponse)
+@protected_router.post("/templates/seed", response_class=HTMLResponse)
 async def templates_seed(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1007,7 +1052,7 @@ async def templates_seed(
 # Inbox Routes
 # ------------------------------------------------------------------------------
 
-@router.get("/inbox", response_class=HTMLResponse)
+@protected_router.get("/inbox", response_class=HTMLResponse)
 async def inbox_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1018,7 +1063,7 @@ async def inbox_page(
         {"request": request, "tenants": tenants, "base_url": str(request.base_url).rstrip('/')},
     )
 
-@router.get("/inbox/conversations", response_class=HTMLResponse)
+@protected_router.get("/inbox/conversations", response_class=HTMLResponse)
 async def inbox_conversations(
     request: Request,
     tenant_api_key: str,
@@ -1034,7 +1079,7 @@ async def inbox_conversations(
         {"request": request, "conversations": conversations},
     )
 
-@router.get("/inbox/messages/{lead_id}", response_class=HTMLResponse)
+@protected_router.get("/inbox/messages/{lead_id}", response_class=HTMLResponse)
 async def inbox_messages(
     request: Request,
     lead_id: int,
@@ -1052,7 +1097,7 @@ async def inbox_messages(
         {"request": request, "messages": messages},
     )
 
-@router.post("/inbox/send", response_class=HTMLResponse)
+@protected_router.post("/inbox/send", response_class=HTMLResponse)
 async def inbox_send(
     request: Request,
     tenant_api_key: str = Form(...),
@@ -1116,7 +1161,7 @@ async def inbox_send(
 # Knowledge Base Routes
 # ------------------------------------------------------------------------------
 
-@router.get("/kb", response_class=HTMLResponse)
+@protected_router.get("/kb", response_class=HTMLResponse)
 async def kb_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1128,7 +1173,7 @@ async def kb_page(
     )
 
 
-@router.get("/kb/list", response_class=HTMLResponse)
+@protected_router.get("/kb/list", response_class=HTMLResponse)
 async def kb_list(
     request: Request,
     tenant_id: int,
@@ -1141,7 +1186,7 @@ async def kb_list(
     )
 
 
-@router.post("/kb/add", response_class=HTMLResponse)
+@protected_router.post("/kb/add", response_class=HTMLResponse)
 async def kb_add(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1166,7 +1211,7 @@ async def kb_add(
     )
 
 
-@router.post("/kb/delete", response_class=HTMLResponse)
+@protected_router.post("/kb/delete", response_class=HTMLResponse)
 async def kb_delete(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1189,7 +1234,7 @@ async def kb_delete(
 # Broadcast Routes
 # ------------------------------------------------------------------------------
 
-@router.get("/broadcasts", response_class=HTMLResponse)
+@protected_router.get("/broadcasts", response_class=HTMLResponse)
 async def broadcasts_page(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1201,7 +1246,7 @@ async def broadcasts_page(
     )
 
 
-@router.get("/broadcasts/list", response_class=HTMLResponse)
+@protected_router.get("/broadcasts/list", response_class=HTMLResponse)
 async def broadcasts_list(
     request: Request,
     tenant_id: int,
@@ -1214,7 +1259,7 @@ async def broadcasts_list(
     )
 
 
-@router.post("/broadcasts/create", response_class=HTMLResponse)
+@protected_router.post("/broadcasts/create", response_class=HTMLResponse)
 async def broadcasts_create(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
@@ -1301,7 +1346,7 @@ async def _execute_broadcast_task(broadcast_id: int, tenant_id: int):
         )
 
 
-@router.post("/broadcasts/send", response_class=HTMLResponse)
+@protected_router.post("/broadcasts/send", response_class=HTMLResponse)
 async def broadcasts_send(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -1320,5 +1365,107 @@ async def broadcasts_send(
         "_broadcast_rows.html",
         {"request": request, "broadcasts": broadcasts},
     )
+
+
+# ------------------------------------------------------------------------------
+# Flows
+# ------------------------------------------------------------------------------
+
+@protected_router.get("/flows", response_class=HTMLResponse)
+async def flows_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    # For MVP, pick first tenant
+    tenants = await list_tenants(session=session)
+    if not tenants:
+        return RedirectResponse(url="/ui/tenants", status_code=status.HTTP_303_SEE_OTHER)
+    tenant_id = tenants[0].id
+    
+    flows = await list_flows(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "flows.html",
+        {"request": request, "flows": flows, "tenant_id": tenant_id},
+    )
+
+
+@protected_router.post("/flows", response_class=HTMLResponse)
+async def flows_create(
+    request: Request,
+    name: str = Form(...),
+    trigger_keyword: str = Form(None),
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    tenants = await list_tenants(session=session)
+    if not tenants:
+        return HTMLResponse("No tenant found", status_code=400)
+    tenant_id = tenants[0].id
+    
+    await create_flow(
+        session=session,
+        tenant_id=tenant_id,
+        name=name,
+        trigger_keyword=trigger_keyword,
+        flow_data={"nodes": []}
+    )
+    
+    flows = await list_flows(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_flow_rows.html",
+        {"request": request, "flows": flows},
+    )
+
+
+@protected_router.get("/flows/{flow_id}/builder", response_class=HTMLResponse)
+async def flows_builder(
+    request: Request,
+    flow_id: int,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    flow = await get_flow(session, flow_id)
+    if not flow:
+        raise HTTPException(status_code=404, detail="Flow not found")
+    
+    # Pass flow_data as JSON string for JS
+    flow_json = json.dumps(flow.flow_data.get("nodes", []))
+    
+    return jinja_templates.TemplateResponse(
+        "flow_builder.html",
+        {"request": request, "flow": flow, "flow_json": flow_json},
+    )
+
+
+@protected_router.post("/flows/{flow_id}/update")
+async def flows_update(
+    flow_id: int,
+    flow_data: dict = Body(...),
+    session: AsyncSession = Depends(get_db_session),
+):
+    await update_flow(session, flow_id, flow_data=flow_data)
+    return {"status": "ok"}
+
+
+@protected_router.post("/flows/{flow_id}/delete", response_class=HTMLResponse)
+async def flows_delete(
+    request: Request,
+    flow_id: int,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    flow = await get_flow(session, flow_id)
+    if flow:
+        tenant_id = flow.tenant_id
+        await delete_flow(session, flow_id)
+        flows = await list_flows(session=session, tenant_id=tenant_id)
+        return jinja_templates.TemplateResponse(
+            "_flow_rows.html",
+            {"request": request, "flows": flows},
+        )
+    return HTMLResponse("", status_code=200)
+
+
+# Combine routers
+router = APIRouter()
+router.include_router(public_router)
+router.include_router(protected_router)
 
 

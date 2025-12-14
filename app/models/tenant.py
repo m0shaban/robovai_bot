@@ -51,7 +51,12 @@ class Tenant(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-
+    flows = relationship(
+        "Flow",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     message_templates = relationship(
         "MessageTemplate",
         back_populates="tenant",

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8" x-data="flowBuilder()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8 fade-in">
+        <div>
+            <h2 class="text-3xl font-bold text-white mb-2">تعديل التدفق: {{ flow.name }}</h2>
+            <div class="flex items-center gap-2 text-slate-400">
+                <span class="text-sm">الكلمة المفتاحية:</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-400 text-xs font-mono">{{ flow.trigger_keyword or '---' }}</span>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <a href="/ui/flows" class="btn-secondary flex items-center gap-2">
+                <span>↩️</span> عودة
+            </a>
+            <button class="btn-primary flex items-center gap-2" @click="saveFlow">
+                <span>💾</span> حفظ التغييرات
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+        <!-- Nodes List -->
+        <div class="lg:col-span-4 flex flex-col h-full">
+            <div class="glass-card flex flex-col h-full overflow-hidden">
+                <div class="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/30">
+                    <h5 class="font-bold text-slate-200">خطوات التدفق</h5>
+                    <button class="px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 text-sm hover:bg-cyan-500/20 transition-colors flex items-center gap-1" @click="addNode">
+                        <span>➕</span> إضافة خطوة
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                    <template x-for="(node, index) in nodes" :key="node.id">
+                        <button type="button" 
+                                class="w-full text-right p-3 rounded-xl border transition-all duration-200 group relative"
+                                :class="selectedNode && selectedNode.id === node.id ? 'bg-cyan-500/10 border-cyan-500/50 shadow-lg shadow-cyan-500/10' : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'"
+                                @click="selectNode(node)">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-mono text-xs px-2 py-0.5 rounded bg-slate-900/50 text-slate-400" x-text="node.id"></span>
+                                <span class="text-xs font-medium" 
+                                      :class="node.type === 'question' ? 'text-amber-400' : 'text-blue-400'"
+                                      x-text="node.type === 'question' ? 'سؤال' : 'رسالة'"></span>
+                            </div>
+                            <p class="text-sm text-slate-300 line-clamp-2" x-text="node.content || '(بدون محتوى)'"></p>
+                            
+                            <!-- Arrow indicator for active -->
+                            <div x-show="selectedNode && selectedNode.id === node.id" 
+                                 class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-500 rounded-r-full"></div>
+                        </button>
+                    </template>
+                    
+                    <div x-show="nodes.length === 0" class="text-center py-8 text-slate-500">
+                        <p>لا توجد خطوات بعد</p>
+                        <button @click="addNode" class="text-cyan-400 text-sm mt-2 hover:underline">أضف الخطوة الأولى</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node Editor -->
+        <div class="lg:col-span-8 h-full">
+            <div class="glass-card h-full flex flex-col" x-show="selectedNode" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+                <div class="p-4 border-b border-slate-700/50 bg-slate-800/30">
+                    <h5 class="font-bold text-slate-200">إعدادات الخطوة</h5>
+                </div>
+                
+                <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="label">معرف الخطوة (ID)</label>
+                            <input type="text" class="input-field font-mono text-sm" x-model="selectedNode.id">
+                            <p class="text-xs text-slate-500 mt-1">معرف فريد (مثل: start, ask_name)</p>
+                        </div>
+                        
+                        <div>
+                            <label class="label">نوع الخطوة</label>
+                            <select class="select-field" x-model="selectedNode.type">
+                                <option value="message">رسالة (إرسال ومتابعة)</option>
+                                <option value="question">سؤال (انتظار الرد)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="label">محتوى الرسالة</label>
+                        <textarea class="input-field min-h-[120px]" x-model="selectedNode.content" placeholder="اكتب نص الرسالة هنا... يمكنك استخدام {variable} للقيم المتغيرة."></textarea>
+                    </div>
+
+                    <div class="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20" x-show="selectedNode.type === 'question'" x-transition>
+                        <label class="label text-amber-400">حفظ الإجابة في متغير</label>
+                        <input type="text" class="input-field border-amber-500/30 focus:border-amber-500" x-model="selectedNode.variable" placeholder="مثال: pizza_size">
+                        <p class="text-xs text-slate-500 mt-1">اسم المتغير الذي سيتم تخزين إجابة المستخدم فيه</p>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="label">الخطوة التالية</label>
+                        <select class="select-field" x-model="selectedNode.next">
+                            <option value="">(إنهاء التدفق)</option>
+                            <template x-for="n in nodes" :key="n.id">
+                                <option :value="n.id" x-text="n.id + ' - ' + (n.content ? n.content.substring(0, 30) + '...' : '')" x-show="n.id !== selectedNode.id"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end pt-6 border-t border-slate-700/50">
+                        <button class="px-4 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors flex items-center gap-2" @click="deleteNode">
+                            <span>🗑️</span> حذف الخطوة
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card h-full flex flex-col items-center justify-center text-slate-500" x-show="!selectedNode">
+                <div class="text-6xl mb-4 opacity-20">👆</div>
+                <p>اختر خطوة للتعديل أو أنشئ خطوة جديدة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alpine.js for interactivity -->
+<script>
+    function flowBuilder() {
+        return {
+            nodes: {{ flow_json | safe }},
+            selectedNode: null,
+
+            init() {
+                if (this.nodes.length > 0) {
+                    this.selectedNode = this.nodes[0];
+                }
+            },
+
+            addNode() {
+                const id = 'step_' + (this.nodes.length + 1);
+                const newNode = {
+                    id: id,
+                    type: 'message',
+                    content: '',
+                    next: ''
+                };
+                this.nodes.push(newNode);
+                this.selectedNode = newNode;
+            },
+
+            selectNode(node) {
+                this.selectedNode = node;
+            },
+
+            deleteNode() {
+                if (!confirm('هل أنت متأكد من حذف هذه الخطوة؟')) return;
+                this.nodes = this.nodes.filter(n => n.id !== this.selectedNode.id);
+                this.selectedNode = null;
+            },
+
+            async saveFlow() {
+                const flowData = { nodes: this.nodes };
+                try {
+                    const response = await fetch('/ui/flows/{{ flow.id }}/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(flowData)
+                    });
+                    if (response.ok) {
+                        alert('تم حفظ التدفق بنجاح!');
+                    } else {
+                        alert('حدث خطأ أثناء الحفظ.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('حدث خطأ أثناء الحفظ.');
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

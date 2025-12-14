@@ -11,6 +11,9 @@ from app.core.config import settings
 from app.crud.scripted_response import list_active_scripted_responses
 from app.crud.tenant import get_tenant_by_id
 from app.crud.knowledge_base import search_kb_context
+from app.crud.flow import get_flow_by_trigger
+from app.services.flow_engine import process_flow, start_flow
+from app.models.lead import Lead
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +21,29 @@ logger = logging.getLogger(__name__)
 @dataclass(slots=True)
 class ChatResult:
     response: str
-    source: str  # "bot" | "ai"
+    source: str  # "bot" | "ai" | "flow"
 
 
 class ChatManager:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def process_message(self, tenant_id: int, user_message: str) -> ChatResult:
+    async def process_message(
+        self, tenant_id: int, user_message: str, lead: Lead | None = None
+    ) -> ChatResult:
+        # 1. Check Active Flow
+        if lead and lead.current_flow_id:
+            flow_response = await process_flow(self._session, lead, user_message)
+            if flow_response:
+                return ChatResult(response=flow_response, source="flow")
+
+        # 2. Check Flow Triggers
+        flow_trigger = await get_flow_by_trigger(self._session, tenant_id, user_message)
+        if flow_trigger and lead:
+            flow_response = await start_flow(self._session, lead, flow_trigger)
+            if flow_response:
+                return ChatResult(response=flow_response, source="flow")
+
         scripted = await list_active_scripted_responses(
             session=self._session, tenant_id=tenant_id
         )

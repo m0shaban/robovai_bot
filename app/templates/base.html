@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTMX for partial updates -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
       body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); color: #e2e8f0; min-height: 100vh; }
       .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
@@ -79,6 +81,9 @@
                 <a href="/ui/rules" class="nav-link {% if '/rules' in request.url.path %}active{% endif %}">
                     <span>📋</span> القواعد
                 </a>
+                <a href="/ui/flows" class="nav-link {% if '/flows' in request.url.path %}active{% endif %}">
+                    <span>🔀</span> التدفقات
+                </a>
                 <a href="/ui/kb" class="nav-link {% if '/kb' in request.url.path %}active{% endif %}">
                     <span>📚</span> قاعدة المعرفة
                 </a>
@@ -111,9 +116,19 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-t border-slate-800/50 mt-auto py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-            <p>© 2024 RoboVAI - منصة الشات بوت الذكي</p>
+    <footer class="border-t border-slate-800/50 mt-auto py-8 bg-slate-900/50 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-3">
+            <div class="flex items-center justify-center gap-2 text-sm text-slate-400">
+                <a href="https://robovai.blogspot.com/" target="_blank" class="font-semibold hover:text-cyan-400 transition-colors">RoboVAI Solutions</a>
+                <span class="text-slate-600">|</span>
+                <span>شريكك في التحول الرقمي</span>
+            </div>
+            <p class="text-xs text-slate-500">
+                تم التطوير بكل حب ❤️ بواسطة <span class="text-indigo-400 font-medium">المهندس محمد شعبان</span>
+            </p>
+            <p class="text-[10px] text-slate-600 mt-2">
+                نقدم حلولاً تقنية متكاملة تشمل تطوير المواقع والتطبيقات، الذكاء الاصطناعي، والأتمتة
+            </p>
         </div>
     </footer>
 
