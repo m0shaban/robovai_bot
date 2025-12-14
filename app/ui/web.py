@@ -61,11 +61,11 @@ def _require_admin_password(admin_password: str) -> None:
         )
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/")
 async def ui_root(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
-) -> HTMLResponse | RedirectResponse:
+):
     """Show onboarding for first-time users, otherwise go to tenants page"""
     tenants = await list_tenants(session=session)
     if not tenants:
