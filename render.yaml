@@ -1,12 +1,10 @@
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: robovai-db
-    plan: free
-    region: frankfurt
+databases:
+  - name: robovai-db
     databaseName: robovai
-    databaseUser: robovai
+    user: robovai
+    plan: free
 
+services:
   # FastAPI Backend + HTMX Dashboard
   - type: web
     name: robovai-backend
