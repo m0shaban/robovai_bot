@@ -9,6 +9,10 @@
 ![RoboVAI Bot Platform](https://raw.githubusercontent.com/m0shaban/robovai_bot/main/app/static/img/logo.png)
 
 <p align="center">
+	<strong>هل أعجبك المشروع؟ ادعم تطوير RoboVAI بفنجان قهوة — مساهمتك تسرّع الابتكار وتدعم الاستمرارية.</strong>
+</p>
+
+<p align="center">
 	<a href="https://www.buymeacoffee.com/moshabanai">
 		<img alt="Buy me a coffee" src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=moshabanai&button_colour=5F7FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" />
 	</a>
