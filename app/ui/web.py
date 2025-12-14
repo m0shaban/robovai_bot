@@ -57,6 +57,13 @@ from app.crud.knowledge_base import (
     delete_kb_item,
     list_kb_items,
 )
+from app.crud.broadcast import (
+    create_broadcast,
+    list_broadcasts,
+    get_broadcast,
+    update_broadcast_stats,
+)
+from app.models.broadcast import BroadcastStatus
 from app.models.chat_log import SenderType
 from app.services.telegram_service import send_telegram_message
 from app.services.meta_service import send_whatsapp_reply, send_page_message_text
@@ -1176,4 +1183,142 @@ async def kb_delete(
         "_kb_rows.html",
         {"request": request, "items": items},
     )
+
+
+# ------------------------------------------------------------------------------
+# Broadcast Routes
+# ------------------------------------------------------------------------------
+
+@router.get("/broadcasts", response_class=HTMLResponse)
+async def broadcasts_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+):
+    tenants = await list_tenants(session=session)
+    return jinja_templates.TemplateResponse(
+        "broadcasts.html",
+        {"request": request, "tenants": tenants},
+    )
+
+
+@router.get("/broadcasts/list", response_class=HTMLResponse)
+async def broadcasts_list(
+    request: Request,
+    tenant_id: int,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    broadcasts = await list_broadcasts(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_broadcast_rows.html",
+        {"request": request, "broadcasts": broadcasts},
+    )
+
+
+@router.post("/broadcasts/create", response_class=HTMLResponse)
+async def broadcasts_create(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    form = await request.form()
+    tenant_id = int(form.get("tenant_id", 0))
+    name = form.get("name", "").strip()
+    message = form.get("message", "").strip()
+    target_channel = form.get("target_channel", "all").strip()
+    
+    if tenant_id and name and message:
+        await create_broadcast(
+            session=session,
+            tenant_id=tenant_id,
+            name=name,
+            message=message,
+            target_channel=target_channel,
+        )
+    
+    broadcasts = await list_broadcasts(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_broadcast_rows.html",
+        {"request": request, "broadcasts": broadcasts},
+    )
+
+
+async def _execute_broadcast_task(broadcast_id: int, tenant_id: int):
+    """Background task to send broadcast messages"""
+    from app.db.session import async_session_maker
+    
+    async with async_session_maker() as session:
+        broadcast = await get_broadcast(session, broadcast_id)
+        if not broadcast:
+            return
+            
+        # Update status to sending
+        await update_broadcast_stats(session, broadcast_id, status=BroadcastStatus.sending)
+        
+        # Fetch leads and integrations
+        leads = await list_leads(session=session, tenant_id=tenant_id, limit=1000) # Limit for safety
+        integrations = await list_integrations_for_tenant(session=session, tenant_id=tenant_id)
+        
+        telegram_integ = next((i for i in integrations if i.channel_type == 'telegram'), None)
+        whatsapp_integ = next((i for i in integrations if i.channel_type == 'whatsapp'), None)
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for lead in leads:
+            phone = lead.phone_number or ""
+            if not phone:
+                continue
+                
+            try:
+                # Telegram Logic
+                if (broadcast.target_channel in ['all', 'telegram']) and telegram_integ and phone.isdigit() and len(phone) < 16:
+                    await send_telegram_message(
+                        bot_token=telegram_integ.access_token,
+                        chat_id=int(phone),
+                        text=broadcast.message
+                    )
+                    sent_count += 1
+                    
+                # WhatsApp Logic
+                elif (broadcast.target_channel in ['all', 'whatsapp']) and whatsapp_integ:
+                    await send_whatsapp_reply(
+                        access_token=whatsapp_integ.access_token,
+                        phone_number_id=whatsapp_integ.external_id,
+                        to=phone,
+                        text=broadcast.message
+                    )
+                    sent_count += 1
+                    
+            except Exception:
+                failed_count += 1
+                
+        # Update final stats
+        await update_broadcast_stats(
+            session, 
+            broadcast_id, 
+            sent=sent_count, 
+            failed=failed_count, 
+            status=BroadcastStatus.completed
+        )
+
+
+@router.post("/broadcasts/send", response_class=HTMLResponse)
+async def broadcasts_send(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db_session),
+) -> HTMLResponse:
+    form = await request.form()
+    broadcast_id = int(form.get("broadcast_id", 0))
+    tenant_id = int(form.get("tenant_id", 0))
+    
+    if broadcast_id and tenant_id:
+        background_tasks.add_task(_execute_broadcast_task, broadcast_id, tenant_id)
+    
+    # Return list immediately (status will update on refresh)
+    broadcasts = await list_broadcasts(session=session, tenant_id=tenant_id)
+    return jinja_templates.TemplateResponse(
+        "_broadcast_rows.html",
+        {"request": request, "broadcasts": broadcasts},
+    )
+
 

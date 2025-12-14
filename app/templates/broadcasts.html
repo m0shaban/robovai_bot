@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}الحملات الإعلانية - RoboVAI{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-50">📢 الحملات الإعلانية (Broadcasts)</h1>
+                <p class="text-slate-400 text-sm mt-1">أرسل رسائل جماعية لعملائك عبر واتساب وتيليجرام</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="label">اختر المشروع</label>
+            <select id="tenant_select" class="select-field" onchange="loadBroadcasts()">
+                <option value="">-- اختر مشروعاً --</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="broadcast-rows">
+            <div class="text-center py-12 text-slate-400">
+                <div class="text-5xl mb-4">📢</div>
+                <p>اختر مشروعاً لعرض الحملات</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-slate-50 mb-4">➕ إنشاء حملة جديدة</h2>
+        
+        <form hx-post="/ui/broadcasts/create" hx-target="#broadcast-rows" hx-on::after-request="this.reset()">
+            <input type="hidden" id="form_tenant_id" name="tenant_id" />
+            
+            <div class="mb-4">
+                <label class="label">اسم الحملة</label>
+                <input type="text" name="name" placeholder="مثلاً: عروض الجمعة البيضاء" required class="input-field" />
+            </div>
+
+            <div class="mb-4">
+                <label class="label">القناة المستهدفة</label>
+                <select name="target_channel" class="select-field">
+                    <option value="all">الكل (واتساب وتيليجرام)</option>
+                    <option value="whatsapp">واتساب فقط</option>
+                    <option value="telegram">تيليجرام فقط</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="label">نص الرسالة</label>
+                <textarea name="message" rows="6" placeholder="اكتب رسالتك هنا..." required class="input-field"></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary w-full">🚀 إنشاء الحملة</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function loadBroadcasts() {
+    const tenantId = document.getElementById('tenant_select').value;
+    document.getElementById('form_tenant_id').value = tenantId;
+    if (tenantId) {
+        htmx.ajax('GET', '/ui/broadcasts/list?tenant_id=' + tenantId, {target: '#broadcast-rows'});
+    }
+}
+</script>
+{% endblock %}
