@@ -28,6 +28,30 @@
                     <span class="text-slate-400">النموذج</span>
                     <span class="text-indigo-400 font-medium">{{ ai_model }}</span>
                 </div>
+
+                {% if ai_models and ai_models|length > 0 %}
+                <div class="p-3 bg-slate-800/50 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-400">النماذج المتاحة</span>
+                        <span class="text-xs text-slate-500">({{ ai_models|length }})</span>
+                    </div>
+                    <div class="max-h-40 overflow-auto space-y-2">
+                        {% for m in ai_models[:20] %}
+                        <div class="flex items-center justify-between gap-2">
+                            <code class="text-xs text-slate-200 break-all">{{ m }}</code>
+                            <button onclick="copyToClipboard('{{ m }}', this)" 
+                                class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0">
+                                📋
+                            </button>
+                        </div>
+                        {% endfor %}
+                        {% if ai_models|length > 20 %}
+                        <p class="text-xs text-slate-500 mt-2">... والمزيد</p>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3">لتغيير النموذج: عدّل متغير البيئة <code class="bg-slate-900 px-1 rounded">LLM_MODEL</code> (أو <code class="bg-slate-900 px-1 rounded">GROQ_MODEL</code>) في Render.</p>
+                </div>
+                {% endif %}
                 {% if not ai_configured %}
                 <div class="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-xl">
                     <p class="text-yellow-300 text-sm mb-2">⚠️ الذكاء الاصطناعي غير مُعد!</p>

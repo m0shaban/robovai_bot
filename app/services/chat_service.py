@@ -62,8 +62,46 @@ class ChatManager:
             logger.warning("No LLM API key configured")
             return "⚠️ الذكاء الاصطناعي غير مُعد. يرجى إضافة GROQ_API_KEY أو LLM_API_KEY في إعدادات البيئة."
 
+        async def _list_models() -> list[str]:
+            try:
+                async with httpx.AsyncClient(
+                    base_url=settings.llm_base_url, timeout=10.0
+                ) as client:
+                    resp = await client.get(
+                        "/models",
+                        headers={"Authorization": f"Bearer {llm_key}"},
+                    )
+                    resp.raise_for_status()
+                    data = resp.json() or {}
+                models = [
+                    str(m.get("id"))
+                    for m in (data.get("data") or [])
+                    if m and m.get("id")
+                ]
+                # Keep stable ordering for fallback selection.
+                return sorted(set(models))
+            except Exception:
+                return []
+
+        def _pick_fallback_model(available: list[str]) -> str | None:
+            if not available:
+                return None
+            preferred = [
+                # Common Groq models (order matters)
+                "meta-llama/llama-4-scout-17b-16e-instruct",
+                "llama-4-scout-17b-16e-instruct",
+                "llama-3.3-70b-versatile",
+                "llama-3.1-70b-versatile",
+            ]
+            available_set = set(available)
+            for name in preferred:
+                if name in available_set:
+                    return name
+            return available[0]
+
+        model = settings.effective_llm_model()
         payload = {
-            "model": settings.llm_model,
+            "model": model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
@@ -81,8 +119,31 @@ class ChatManager:
             async with httpx.AsyncClient(
                 base_url=settings.llm_base_url, timeout=30.0
             ) as client:
-                logger.info(f"Calling LLM at {settings.llm_base_url} with model {settings.llm_model}")
-                resp = await client.post("/chat/completions", json=payload, headers=headers)
+                logger.info(
+                    f"Calling LLM at {settings.llm_base_url} with model {payload['model']}"
+                )
+                resp = await client.post(
+                    "/chat/completions", json=payload, headers=headers
+                )
+
+                # If the configured model is invalid, try a one-time fallback from /models.
+                if resp.status_code == 400:
+                    body = (resp.text or "").lower()
+                    if "model" in body or "not found" in body:
+                        available = await _list_models()
+                        fallback = _pick_fallback_model(available)
+                        if fallback and fallback != payload["model"]:
+                            logger.warning(
+                                "Model '%s' rejected; retrying with fallback '%s'",
+                                payload["model"],
+                                fallback,
+                            )
+                            payload2 = dict(payload)
+                            payload2["model"] = fallback
+                            resp = await client.post(
+                                "/chat/completions", json=payload2, headers=headers
+                            )
+
                 resp.raise_for_status()
                 data = resp.json()
 
@@ -96,6 +157,8 @@ class ChatManager:
                 return "⚠️ تم تجاوز حد الطلبات. يرجى المحاولة لاحقاً."
             elif e.response.status_code == 503:
                 return "⚠️ خدمة الذكاء الاصطناعي غير متاحة حالياً."
+            if e.response.status_code == 400:
+                return "⚠️ فشل طلب الذكاء الاصطناعي (قد يكون اسم النموذج غير صحيح). جرّب تغيير LLM_MODEL في Render."
             return f"⚠️ خطأ من خدمة AI: {e.response.status_code}"
         
         except httpx.TimeoutException:

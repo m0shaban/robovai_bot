@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -59,6 +60,57 @@ TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 router = APIRouter(prefix="/ui", tags=["ui"])
+
+
+async def _get_ai_models() -> list[str]:
+    """Best-effort fetch of available models from the configured OpenAI-compatible endpoint."""
+
+    llm_key = settings.effective_llm_api_key()
+    if not llm_key:
+        return []
+
+    try:
+        async with httpx.AsyncClient(
+            base_url=settings.llm_base_url, timeout=10.0
+        ) as client:
+            resp = await client.get(
+                "/models", headers={"Authorization": f"Bearer {llm_key}"}
+            )
+            resp.raise_for_status()
+            data = resp.json() or {}
+        models = [
+            str(m.get("id"))
+            for m in (data.get("data") or [])
+            if m and m.get("id")
+        ]
+        return sorted(set(models))
+    except Exception:
+        return []
+
+
+async def _settings_ai_context(request: Request) -> dict:
+    ai_configured = bool(settings.effective_llm_api_key())
+
+    llm_url = (settings.llm_base_url or "").lower()
+    if "groq" in llm_url:
+        ai_provider = "Groq"
+    elif "nvidia" in llm_url or "nim" in llm_url:
+        ai_provider = "NVIDIA NIM"
+    elif "openai" in llm_url:
+        ai_provider = "OpenAI"
+    else:
+        ai_provider = "Custom LLM"
+
+    base_url = str(request.base_url).rstrip("/")
+    ai_models = await _get_ai_models() if ai_configured else []
+
+    return {
+        "ai_configured": ai_configured,
+        "ai_provider": ai_provider,
+        "ai_model": settings.effective_llm_model(),
+        "ai_models": ai_models,
+        "base_url": base_url,
+    }
 
 
 def _require_admin_password(admin_password: str) -> None:
@@ -587,31 +639,14 @@ async def settings_full(
             {"request": request, "tenant": None},
         )
     
-    # Check AI configuration
-    ai_configured = bool(settings.effective_llm_api_key())
-    
-    # Determine AI provider
-    llm_url = settings.llm_base_url.lower()
-    if "groq" in llm_url:
-        ai_provider = "Groq"
-    elif "nvidia" in llm_url or "nim" in llm_url:
-        ai_provider = "NVIDIA NIM"
-    elif "openai" in llm_url:
-        ai_provider = "OpenAI"
-    else:
-        ai_provider = "Custom LLM"
-    
-    base_url = str(request.base_url).rstrip('/')
-    
+    ai_ctx = await _settings_ai_context(request)
+
     return jinja_templates.TemplateResponse(
         "_settings_form.html",
         {
             "request": request,
             "tenant": tenant,
-            "ai_configured": ai_configured,
-            "ai_provider": ai_provider,
-            "ai_model": settings.llm_model,
-            "base_url": base_url,
+            **ai_ctx,
         },
     )
 
@@ -634,27 +669,14 @@ async def settings_data(
             {"request": request, "tenant": None, "error": "مفتاح API غير صالح"},
         )
     
-    # Add AI status
-    ai_configured = bool(settings.effective_llm_api_key())
-    llm_url = settings.llm_base_url.lower()
-    if "groq" in llm_url:
-        ai_provider = "Groq"
-    elif "nvidia" in llm_url:
-        ai_provider = "NVIDIA NIM"
-    else:
-        ai_provider = "Custom LLM"
-    
-    base_url = str(request.base_url).rstrip('/')
-    
+    ai_ctx = await _settings_ai_context(request)
+
     return jinja_templates.TemplateResponse(
         "_settings_form.html", 
         {
             "request": request, 
             "tenant": tenant,
-            "ai_configured": ai_configured,
-            "ai_provider": ai_provider,
-            "ai_model": settings.llm_model,
-            "base_url": base_url,
+            **ai_ctx,
         }
     )
 
@@ -689,9 +711,16 @@ async def update_settings_web(
         webhook_url=webhook_url or None,
     )
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant.id)
+
+    ai_ctx = await _settings_ai_context(request)
     return jinja_templates.TemplateResponse(
         "_settings_form.html",
-        {"request": request, "tenant": tenant, "success": "تم حفظ الإعدادات بنجاح ✓"},
+        {
+            "request": request,
+            "tenant": tenant,
+            "success": "تم حفظ الإعدادات بنجاح ✓",
+            **ai_ctx,
+        },
     )
 
 
@@ -726,25 +755,18 @@ async def send_test_message(
             '<div class="text-red-400 text-sm">مفتاح API غير صالح</div>'
         )
     
-    # Import chat service
-    from app.services.chat_service import process_message
-    
     try:
-        # Process the message through AI
-        response = await process_message(
-            session=session,
-            tenant_id=tenant.id,
-            channel="test",
-            sender_id="test_user",
-            message_text=message,
-        )
+        from app.services.chat_service import ChatManager
+
+        manager = ChatManager(session=session)
+        result = await manager.process_message(tenant_id=tenant.id, user_message=message)
         
         return jinja_templates.TemplateResponse(
             "_chat_message.html",
             {
                 "request": request,
                 "user_message": message,
-                "bot_response": response,
+                "bot_response": result.response,
                 "timestamp": datetime.now().strftime("%H:%M"),
             }
         )
@@ -821,17 +843,12 @@ async def widget_chat(
     if not tenant:
         return HTMLResponse('<div class="widget-error">Invalid configuration</div>')
     
-    from app.services.chat_service import process_message
-    
     try:
-        response = await process_message(
-            session=session,
-            tenant_id=tenant.id,
-            channel="widget",
-            sender_id=session_id or f"widget_{secrets.token_hex(8)}",
-            message_text=message,
-        )
-        return HTMLResponse(f'<div class="bot-message">{response}</div>')
+        from app.services.chat_service import ChatManager
+
+        manager = ChatManager(session=session)
+        result = await manager.process_message(tenant_id=tenant.id, user_message=message)
+        return HTMLResponse(f'<div class="bot-message">{result.response}</div>')
     except Exception as e:
         return HTMLResponse(f'<div class="widget-error">Error: {str(e)}</div>')
 

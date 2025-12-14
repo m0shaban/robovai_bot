@@ -68,7 +68,7 @@ async def extract_lead_info_llm(message: str) -> dict[str, str] | None:
     user = f"Message: {message}"
 
     payload = {
-        "model": settings.llm_model,
+        "model": settings.effective_llm_model(),
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": user},

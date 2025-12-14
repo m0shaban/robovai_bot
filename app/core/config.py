@@ -36,14 +36,21 @@ class Settings(BaseSettings):
     )
     llm_api_key: str = Field(default="", validation_alias="LLM_API_KEY")
     llm_model: str = Field(
-        default="llama-3.1-70b-versatile", validation_alias="LLM_MODEL"
+        # Default picked to be a common Groq model name; override via env.
+        default="llama-3.3-70b-versatile", validation_alias="LLM_MODEL"
     )
 
     # Convenience alias requested: GROQ_API_KEY can be used instead of LLM_API_KEY
     groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
+
+    # Optional convenience aliases for model selection
+    groq_model: str = Field(default="", validation_alias="GROQ_MODEL")
     
     # NVIDIA NIM API support
     nvidia_api_key: str = Field(default="", validation_alias="NVIDIA_API_KEY")
+
+    # Optional convenience alias for NVIDIA model selection
+    nvidia_model: str = Field(default="", validation_alias="NVIDIA_MODEL")
 
     # Webhook behavior
     webhook_timeout_seconds: float = Field(
@@ -52,6 +59,10 @@ class Settings(BaseSettings):
 
     def effective_llm_api_key(self) -> str:
         return self.llm_api_key or self.groq_api_key or self.nvidia_api_key
+
+    def effective_llm_model(self) -> str:
+        # Prefer explicit LLM_MODEL, then provider-specific aliases.
+        return self.llm_model or self.groq_model or self.nvidia_model
 
 
 def admin_auth_enabled() -> bool:
