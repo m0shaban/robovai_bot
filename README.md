@@ -19,7 +19,6 @@
 - 🚀 **Easy Deploy**: Single service on Render
 
 ## 🎯 Quick Start (Local)
-## 🎯 Quick Start (Local)
 
 ### 1. Prerequisites
 - Python 3.11+
