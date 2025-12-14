@@ -70,35 +70,54 @@
             </div>
         </div>
 
-        <!-- Features Grid -->
-        <div id="features" class="max-w-7xl mx-auto px-4 py-20">
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
-                    <div class="text-4xl mb-4">🧠</div>
-                    <h3 class="text-xl font-bold text-white mb-2">ذكاء اصطناعي متطور</h3>
-                    <p class="text-slate-400">يفهم لهجات العملاء ويجيب بدقة باستخدام أحدث نماذج LLM.</p>
-                </div>
-                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
-                    <div class="text-4xl mb-4">📱</div>
-                    <h3 class="text-xl font-bold text-white mb-2">متعدد القنوات</h3>
-                    <p class="text-slate-400">إدارة مركزية لمحادثات واتساب، تيليجرام، ماسنجر، وإنستجرام.</p>
-                </div>
-                <div class="glass-card p-8 rounded-3xl hover:bg-slate-800/50 transition-colors">
-                    <div class="text-4xl mb-4">📊</div>
-                    <h3 class="text-xl font-bold text-white mb-2">تحليلات وتقارير</h3>
-                    <p class="text-slate-400">لوحة تحكم شاملة لمتابعة الأداء وسلوك العملاء لحظة بلحظة.</p>
-                </div>
-            </div>
-        </div>
-    </main>
+        <!-- Footer -->
+        <footer class="py-12 bg-gradient-to-b from-slate-900/60 to-slate-900/40 backdrop-blur-sm border-t border-slate-800/50">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid gap-6 md:grid-cols-3 items-start">
+                    <div class="flex flex-col items-center md:items-start text-center md:text-right">
+                        <div class="flex items-center gap-3">
+                            <img src="/static/img/logo.png" alt="Logo" class="w-12 h-12 rounded-full shadow-md">
+                            <div>
+                                <div class="text-lg font-bold text-slate-100">RoboVAI Bot</div>
+                                <div class="text-xs text-slate-400">منصة الشات بوت الذكي</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-400 max-w-xs mt-3">نحسن تجربة عملائك بأدوات ذكية، تحليل، وإدارة قنوات متعددة بسهولة.</p>
+                    </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-sm py-12">
-        <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
-            <div class="flex items-center justify-center gap-2 text-2xl font-bold text-slate-200 mb-4">
-                <img src="/static/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full">
-                <span>RoboVAI Bot</span>
+                    <div class="flex flex-col items-center">
+                        <div class="flex gap-4 text-sm text-slate-300 mb-3">
+                            <a href="/ui/login" class="hover:text-cyan-400 transition-colors">تسجيل الدخول</a>
+                            <span class="text-slate-600">•</span>
+                            <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات</a>
+                            <span class="text-slate-600">•</span>
+                            <a href="#" class="hover:text-cyan-400 transition-colors">سياسة الخصوصية</a>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <a href="https://github.com/m0shaban/robovai_bot" target="_blank" class="p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors" aria-label="GitHub">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-slate-200"><path d="M12 .5C5.7.5.9 5.3.9 11.6c0 4.7 3 8.7 7.2 10.1.5.1.7-.2.7-.5v-1.8c-2.9.6-3.4-1.3-3.4-1.3-.4-1.1-1-1.4-1-1.4-.8-.6.1-.6.1-.6.9.1 1.4.9 1.4.9.8 1.4 2.1 1 2.6.8.1-.6.3-1 .6-1.3-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.8 0 0 .8-.2 2.8 1 .8-.2 1.7-.3 2.6-.3s1.8.1 2.6.3c2-.1 2.8-1 2.8-1 .5 1.5.2 2.5.1 2.8.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.7 5 .3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5 4.2-1.4 7.2-5.4 7.2-10.1C23.1 5.3 18.3.5 12 .5z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center md:items-end text-center md:text-right">
+                        <div class="inline-block bg-slate-800/40 p-4 rounded-2xl">
+                            <p class="text-sm text-slate-200 font-semibold">لو عجبتك RoboVAI، ادعمنا بفنجان قهوة ☕️ وساعدنا نطلق مزايا جديدة أسرع! 🚀</p>
+                            <div class="mt-3">
+                                <a href="https://www.buymeacoffee.com/moshabanai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg hover:scale-[1.02] transition-transform">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white"><path d="M18 8h1a3 3 0 0 1 0 6h-1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8h12v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    Buy me a coffee
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 border-t border-slate-800/40 pt-6 text-center text-xs text-slate-500">
+                    تم التطوير بكل حب ❤️ بواسطة <a href="https://robovai.blogspot.com/" class="text-indigo-400 font-medium hover:text-indigo-300">المهندس محمد شعبان</a>
+                </div>
             </div>
+        </footer>
             <div class="flex items-center justify-center gap-4 text-sm text-slate-400">
                 <a href="https://robovai.blogspot.com/" target="_blank" class="hover:text-cyan-400 transition-colors">RoboVAI Solutions</a>
                 <span>•</span>
