@@ -4,6 +4,7 @@ import secrets
 import json
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks, Response, Body
@@ -16,6 +17,8 @@ from jose import jwt, JWTError
 from app.api.deps import get_db_session
 from app.core.config import admin_auth_enabled, settings
 from app.core import security
+from app.models.user import User, UserRole
+from app.services.auth_service import get_current_user as get_auth_user, AuthError
 from app.crud.tenant import (
     create_tenant,
     delete_tenant,
@@ -115,16 +118,35 @@ async def login_submit(request: Request, password: str = Form(...)):
 async def logout():
     response = RedirectResponse(url="/ui/login", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
     return response
 
-async def check_auth(request: Request):
+async def check_auth(request: Request, session: AsyncSession = Depends(get_db_session)) -> Optional[User]:
+    """
+    Check authentication - supports both legacy admin password and new user-based auth.
+    Returns User object if authenticated via new system, None if via legacy admin.
+    """
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
+    
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[security.ALGORITHM])
-        if payload.get("sub") != "admin":
-             raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
+        
+        # Legacy admin auth (sub="admin")
+        if payload.get("sub") == "admin":
+            return None  # Legacy admin mode
+        
+        # New user-based auth (sub=user_id)
+        user_id = payload.get("sub")
+        if user_id:
+            try:
+                user = await get_auth_user(session, token)
+                return user
+            except AuthError:
+                raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/auth/login"})
+        
+        raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
     except JWTError:
         raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/ui/login"})
 

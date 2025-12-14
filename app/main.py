@@ -11,6 +11,7 @@ from app.api.v1.api import api_router
 from app.api.health import router as health_router
 from app.api.webhooks import router as webhooks_router
 from app.ui.web import router as ui_router
+from app.ui.auth_routes import auth_ui_router
 from app.core.config import settings
 from app.db.session import engine
 
@@ -65,3 +66,4 @@ app.include_router(api_router)
 app.include_router(health_router)
 app.include_router(webhooks_router)
 app.include_router(ui_router)
+app.include_router(auth_ui_router)

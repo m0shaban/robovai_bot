@@ -63,5 +63,11 @@ class Tenant(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    users = relationship(
+        "User",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (Index("ix_tenants_name", "name"),)

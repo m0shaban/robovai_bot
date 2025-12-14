@@ -9,6 +9,7 @@ from app.models.message_template import MessageTemplate, TemplateCategory
 from app.models.knowledge_base import KnowledgeBase
 from app.models.broadcast import Broadcast, BroadcastStatus
 from app.models.flow import Flow
+from app.models.user import User, UserRole
 
 __all__ = [
     "Base",
@@ -26,4 +27,6 @@ __all__ = [
     "Broadcast",
     "BroadcastStatus",
     "Flow",
+    "User",
+    "UserRole",
 ]
