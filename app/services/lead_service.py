@@ -5,7 +5,7 @@ import re
 
 import httpx
 
-from app.crud.lead import create_lead
+from app.crud.lead import create_lead, get_lead_by_phone
 from app.crud.tenant import get_tenant_by_id
 from app.core.config import settings
 from app.db.session import async_session_maker
@@ -98,9 +98,19 @@ async def extract_lead_info_llm(message: str) -> dict[str, str] | None:
 async def save_lead(
     *, tenant_id: int, customer_name: str | None, phone_number: str, summary: str | None
 ) -> int:
-    """Persists a lead and returns its database id."""
+    """Persists a lead and returns its database id. Updates existing if found."""
 
     async with async_session_maker() as session:
+        # Check if exists
+        existing = await get_lead_by_phone(session, tenant_id, phone_number)
+        if existing:
+            # Update if we have new info (e.g. name)
+            if customer_name and not existing.customer_name:
+                existing.customer_name = customer_name
+                session.add(existing)
+                await session.commit()
+            return existing.id
+
         lead = await create_lead(
             session=session,
             tenant_id=tenant_id,
@@ -132,7 +142,7 @@ async def trigger_external_webhook(
         return
 
 
-async def detect_and_save_lead(*, tenant_id: int, user_message: str) -> None:
+async def detect_and_save_lead(*, tenant_id: int, user_message: str, sender_id: str | None = None) -> None:
     # Regex-first extraction for speed.
     info = extract_lead_info(user_message)
 
@@ -140,11 +150,17 @@ async def detect_and_save_lead(*, tenant_id: int, user_message: str) -> None:
     if info is None:
         info = await extract_lead_info_llm(user_message)
 
-    if info is None:
-        return
+    phone_number = None
+    customer_name = None
 
-    phone_number = (info.get("phone_number") or "").strip()
-    customer_name = (info.get("customer_name") or "").strip() or None
+    if info:
+        phone_number = (info.get("phone_number") or "").strip()
+        customer_name = (info.get("customer_name") or "").strip() or None
+
+    # Fallback to sender_id if no phone found in text
+    if not phone_number and sender_id:
+        phone_number = sender_id
+
     if not phone_number:
         return
 

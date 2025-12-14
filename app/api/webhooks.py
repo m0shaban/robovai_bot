@@ -80,6 +80,7 @@ async def telegram_webhook(
         session=session,
         tenant_id=integ.tenant_id,
         message=str(text),
+        sender_id=str(chat_id),
         background_tasks=background_tasks,
     )
 
@@ -203,6 +204,7 @@ async def meta_webhook(
                         session=session,
                         tenant_id=integ.tenant_id,
                         message=mapped_body,
+                        sender_id=str(from_number),
                         background_tasks=background_tasks,
                     )
 
@@ -282,6 +284,7 @@ async def meta_webhook(
                     session=session,
                     tenant_id=integ.tenant_id,
                     message=mapped_text,
+                    sender_id=str(sender),
                     background_tasks=background_tasks,
                 )
 

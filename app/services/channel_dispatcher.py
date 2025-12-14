@@ -12,6 +12,7 @@ async def generate_chat_response(
     session: AsyncSession,
     tenant_id: int,
     message: str,
+    sender_id: str | None = None,
     background_tasks: BackgroundTasks | None = None,
 ) -> tuple[str, str]:
     """Runs the unified chatbot logic and optionally triggers lead detection."""
@@ -21,7 +22,10 @@ async def generate_chat_response(
 
     if background_tasks is not None:
         background_tasks.add_task(
-            detect_and_save_lead, tenant_id=tenant_id, user_message=message
+            detect_and_save_lead, 
+            tenant_id=tenant_id, 
+            user_message=message,
+            sender_id=sender_id
         )
 
     return result.response, result.source

@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,8 +45,16 @@ from app.crud.scripted_response import (
     list_active_scripted_responses,
     update_scripted_response,
 )
-from app.crud.lead import list_leads
-from app.crud.chat_log import list_chat_logs_for_tenant
+from app.crud.lead import list_leads, get_lead_by_id
+from app.crud.chat_log import (
+    list_chat_logs_for_tenant, 
+    get_inbox_conversations, 
+    get_chat_history_for_lead, 
+    create_chat_log
+)
+from app.models.chat_log import SenderType
+from app.services.telegram_service import send_telegram_message
+from app.services.meta_service import send_whatsapp_reply, send_page_message_text
 from app.crud.stats import get_dashboard_stats, get_messages_per_day, get_recent_activity
 from app.crud.message_template import (
     create_message_template,
@@ -980,4 +988,113 @@ async def templates_seed(
     return jinja_templates.TemplateResponse(
         "_template_rows.html",
         {"request": request, "templates": msg_templates},
+    )
+
+
+# ------------------------------------------------------------------------------
+# Inbox Routes
+# ------------------------------------------------------------------------------
+
+@router.get("/inbox", response_class=HTMLResponse)
+async def inbox_page(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+):
+    tenants = await list_tenants(session=session)
+    return jinja_templates.TemplateResponse(
+        "inbox.html",
+        {"request": request, "tenants": tenants, "base_url": str(request.base_url).rstrip('/')},
+    )
+
+@router.get("/inbox/conversations", response_class=HTMLResponse)
+async def inbox_conversations(
+    request: Request,
+    tenant_api_key: str,
+    session: AsyncSession = Depends(get_db_session),
+):
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return HTMLResponse("Tenant not found", status_code=404)
+    
+    conversations = await get_inbox_conversations(session=session, tenant_id=tenant.id)
+    return jinja_templates.TemplateResponse(
+        "_inbox_conversations.html",
+        {"request": request, "conversations": conversations},
+    )
+
+@router.get("/inbox/messages/{lead_id}", response_class=HTMLResponse)
+async def inbox_messages(
+    request: Request,
+    lead_id: int,
+    tenant_api_key: str,
+    session: AsyncSession = Depends(get_db_session),
+):
+    # Verify tenant access
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return HTMLResponse("Tenant not found", status_code=404)
+        
+    messages = await get_chat_history_for_lead(session=session, lead_id=lead_id)
+    return jinja_templates.TemplateResponse(
+        "_inbox_messages.html",
+        {"request": request, "messages": messages},
+    )
+
+@router.post("/inbox/send", response_class=HTMLResponse)
+async def inbox_send(
+    request: Request,
+    tenant_api_key: str = Form(...),
+    lead_id: int = Form(...),
+    message: str = Form(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    session: AsyncSession = Depends(get_db_session),
+):
+    tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
+    if not tenant:
+        return HTMLResponse("Tenant not found", status_code=404)
+        
+    lead = await get_lead_by_id(session=session, lead_id=lead_id)
+    if not lead:
+        return HTMLResponse("Lead not found", status_code=404)
+
+    # 1. Save to DB
+    chat_log = await create_chat_log(
+        session=session,
+        lead_id=lead_id,
+        message=message,
+        sender_type=SenderType.bot,
+    )
+    
+    # 2. Send to Channel (Heuristic)
+    integrations = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
+    
+    phone = lead.phone_number or ""
+    
+    if phone.isdigit() and len(phone) < 16: # Likely Telegram
+        target_integ = next((i for i in integrations if i.channel_type == 'telegram'), None)
+        if target_integ:
+            background_tasks.add_task(
+                send_telegram_message,
+                bot_token=target_integ.access_token,
+                chat_id=int(phone),
+                text=message
+            )
+            
+    elif any(i.channel_type == 'whatsapp' for i in integrations): # WhatsApp
+         target_integ = next((i for i in integrations if i.channel_type == 'whatsapp'), None)
+         if target_integ:
+             background_tasks.add_task(
+                 send_whatsapp_reply,
+                 access_token=target_integ.access_token,
+                 phone_number_id=target_integ.external_id,
+                 to=phone,
+                 text=message
+             )
+             
+    # ... handle others
+    
+    # Return the new message rendered
+    return jinja_templates.TemplateResponse(
+        "_inbox_messages.html",
+        {"request": request, "messages": [chat_log]},
     )

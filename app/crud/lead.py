@@ -36,3 +36,18 @@ async def list_leads(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+async def get_lead_by_phone(
+    session: AsyncSession, tenant_id: int, phone_number: str
+) -> Lead | None:
+    result = await session.execute(
+        select(Lead)
+        .where(Lead.tenant_id == tenant_id)
+        .where(Lead.phone_number == phone_number)
+    )
+    return result.scalars().first()
+
+
+async def get_lead_by_id(session: AsyncSession, lead_id: int) -> Lead | None:
+    return await session.get(Lead, lead_id)

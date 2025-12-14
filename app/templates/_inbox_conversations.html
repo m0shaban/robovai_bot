@@ -1,0 +1,20 @@
+{% if conversations %}
+    {% for lead, last_msg in conversations %}
+    <div id="conv-{{ lead.id }}" 
+         onclick="loadChat('{{ lead.id }}', '{{ lead.customer_name or lead.phone_number }}', '{{ lead.phone_number }}')"
+         class="conversation-item p-3 rounded-xl cursor-pointer border border-transparent hover:bg-slate-800/50 transition-all mb-1 group">
+        <div class="flex justify-between items-start mb-1">
+            <h4 class="font-semibold text-slate-200 text-sm">{{ lead.customer_name or lead.phone_number or 'زائر' }}</h4>
+            <span class="text-[10px] text-slate-500">{{ last_msg.timestamp.strftime('%H:%M') }}</span>
+        </div>
+        <p class="text-xs text-slate-400 line-clamp-1 group-hover:text-slate-300 transition-colors">
+            {% if last_msg.sender_type.value == 'bot' %}🤖: {% else %}👤: {% endif %}
+            {{ last_msg.message }}
+        </p>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-8 text-slate-500">
+        <p>لا توجد محادثات نشطة</p>
+    </div>
+{% endif %}
