@@ -27,7 +27,11 @@ target_metadata = Base.metadata
 
 def get_database_url() -> str:
     # Alembic expects a URL. We take it from env via Settings.
-    return settings.database_url
+    url = settings.database_url
+    # Render provides postgresql:// but we need postgresql+asyncpg://
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
 
 
 def run_migrations_offline() -> None:
