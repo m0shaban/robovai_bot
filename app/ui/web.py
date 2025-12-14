@@ -350,8 +350,11 @@ async def create_channel_web(
         is_active=is_active,
     )
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
+    base_url = str(request.base_url).rstrip('/')
     return jinja_templates.TemplateResponse(
-        "_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant}, status_code=status.HTTP_201_CREATED
+        "_channel_rows.html",
+        {"request": request, "channels": channels, "tenant": tenant, "base_url": base_url},
+        status_code=status.HTTP_201_CREATED,
     )
 
 
@@ -375,7 +378,11 @@ async def delete_channel_web(
         await delete_integration(session=session, integration=channel)
     
     channels = await list_integrations_for_tenant(session=session, tenant_id=tenant.id)
-    return jinja_templates.TemplateResponse("_channel_rows.html", {"request": request, "channels": channels, "tenant": tenant})
+    base_url = str(request.base_url).rstrip('/')
+    return jinja_templates.TemplateResponse(
+        "_channel_rows.html",
+        {"request": request, "channels": channels, "tenant": tenant, "base_url": base_url},
+    )
 
 
 # ============ QUICK REPLIES ============
