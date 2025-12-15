@@ -92,9 +92,18 @@
                     </svg>
                     <h3 class="text-green-400 font-bold text-lg mb-1">تم إنشاء الحساب بنجاح!</h3>
                     <p class="text-sm text-slate-300">{{ message or 'يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.' }}</p>
-                    <a href="/ui/auth/login" class="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                        تسجيل الدخول
-                    </a>
+                    <div class="flex flex-col gap-2 mt-4">
+                        <a href="/ui/auth/login" class="inline-block px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            تسجيل الدخول
+                        </a>
+                        {% if user_email %}
+                        <button type="button" onclick="resendVerification('{{ user_email }}')" id="resendBtn"
+                                class="inline-block px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/30 transition-colors text-sm">
+                            📧 إعادة إرسال رابط التفعيل
+                        </button>
+                        <p id="resendStatus" class="text-xs text-slate-400 hidden"></p>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endif %}
                 
@@ -226,11 +235,15 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit"
-                            class="w-full py-3 sm:py-3.5 mt-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-bold rounded-xl btn-glow transition-all flex items-center justify-center gap-2 text-base">
-                        <span>إنشاء الحساب</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" id="submitBtn"
+                            class="w-full py-3 sm:py-3.5 mt-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-bold rounded-xl btn-glow transition-all flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="btnText">إنشاء الحساب</span>
+                        <svg id="btnArrow" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                        <svg id="btnSpinner" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     </button>
                 </form>
@@ -321,6 +334,65 @@
                 }
             } else {
                 matchText.classList.add('hidden');
+            }
+        }
+
+        // Form submit handler with loading state
+        const form = document.getElementById('registerForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const btn = document.getElementById('submitBtn');
+                const btnText = document.getElementById('btnText');
+                const btnArrow = document.getElementById('btnArrow');
+                const btnSpinner = document.getElementById('btnSpinner');
+                
+                // Disable button and show loading
+                btn.disabled = true;
+                btnText.textContent = 'جاري إنشاء الحساب...';
+                btnArrow.classList.add('hidden');
+                btnSpinner.classList.remove('hidden');
+            });
+        }
+
+        // Resend verification email
+        async function resendVerification(email) {
+            const btn = document.getElementById('resendBtn');
+            const status = document.getElementById('resendStatus');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري الإرسال...';
+            status.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/ui/auth/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'email=' + encodeURIComponent(email)
+                });
+                
+                const data = await response.json();
+                
+                status.classList.remove('hidden');
+                if (data.success) {
+                    status.className = 'text-xs text-green-400 mt-1';
+                    status.textContent = '✅ ' + data.message;
+                    btn.textContent = '✅ تم الإرسال';
+                    btn.classList.remove('bg-cyan-500/20', 'text-cyan-400', 'border-cyan-500/30');
+                    btn.classList.add('bg-green-500/20', 'text-green-400', 'border-green-500/30');
+                } else {
+                    status.className = 'text-xs text-red-400 mt-1';
+                    status.textContent = '❌ ' + data.message;
+                    btn.textContent = '📧 إعادة إرسال رابط التفعيل';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                status.classList.remove('hidden');
+                status.className = 'text-xs text-red-400 mt-1';
+                status.textContent = '❌ حدث خطأ، حاول مرة أخرى';
+                btn.textContent = '📧 إعادة إرسال رابط التفعيل';
+                btn.disabled = false;
             }
         }
     </script>
