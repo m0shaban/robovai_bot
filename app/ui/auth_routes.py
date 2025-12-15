@@ -95,12 +95,16 @@ async def register_submit(
         verification_url = f"{request.base_url}ui/auth/verify-email?token={token}"
         
         try:
-            await email_service.send_verification_email(
+            sent = await email_service.send_verification_email(
                 to_email=user.email,
                 verification_url=verification_url,
                 user_name=user.full_name,
             )
-            print(f"✅ Verification email sent to {email}")
+            if sent:
+                print(f"✅ Verification email sent to {email}")
+            else:
+                print(f"⚠️  Email service returned False for {email}")
+                print(f"[DEV] Verification link: {verification_url}")
         except Exception as e:
             print(f"⚠️  Failed to send verification email: {e}")
             print(f"[DEV] Verification link: {verification_url}")

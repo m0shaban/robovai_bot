@@ -6,9 +6,14 @@ from __future__ import annotations
 
 import logging
 import os
+import smtplib
+import asyncio
+from email.message import EmailMessage
 from typing import Optional
 
 import httpx
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +22,10 @@ class EmailService:
     """Email service with multiple backend support."""
     
     def __init__(self):
-        self.smtp_enabled = bool(os.getenv("SMTP_HOST"))
-        self.sendgrid_enabled = bool(os.getenv("SENDGRID_API_KEY"))
-        self.from_email = os.getenv("EMAIL_FROM", "noreply@robovai.com")
-        self.from_name = os.getenv("EMAIL_FROM_NAME", "RoboVAI")
+        self.smtp_enabled = bool(settings.smtp_host)
+        self.sendgrid_enabled = bool(settings.sendgrid_api_key)
+        self.from_email = settings.email_from
+        self.from_name = settings.email_from_name
         
     async def send_verification_email(
         self,
@@ -139,7 +144,7 @@ class EmailService:
         html_content: str,
     ) -> bool:
         """Send email via SendGrid API."""
-        api_key = os.getenv("SENDGRID_API_KEY")
+        api_key = settings.sendgrid_api_key
         url = "https://api.sendgrid.com/v3/mail/send"
         
         payload = {
@@ -172,11 +177,40 @@ class EmailService:
         subject: str,
         html_content: str,
     ) -> bool:
-        """Send email via SMTP (requires aiosmtplib)."""
-        # TODO: Implement SMTP sending with aiosmtplib
-        # For now, just log
-        logger.info(f"[SMTP] Would send email to {to_email}")
-        return False
+        """Send email via SMTP (using standard library in thread pool)."""
+        try:
+            message = EmailMessage()
+            message["From"] = f"{self.from_name} <{self.from_email}>"
+            message["To"] = to_email
+            message["Subject"] = subject
+            message.set_content(html_content, subtype="html")
+
+            def send_sync():
+                # Connect to SMTP server
+                with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+                    # Identify ourselves
+                    server.ehlo()
+                    
+                    # Start TLS if enabled (standard for port 587)
+                    if settings.smtp_tls:
+                        server.starttls()
+                        server.ehlo()  # Re-identify after TLS
+                    
+                    # Login if credentials provided
+                    if settings.smtp_user and settings.smtp_password:
+                        server.login(settings.smtp_user, settings.smtp_password)
+                    
+                    # Send
+                    server.send_message(message)
+
+            # Run blocking SMTP call in a separate thread
+            await asyncio.to_thread(send_sync)
+            logger.info(f"✅ Email sent to {to_email} via SMTP")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ SMTP error: {e}")
+            return False
 
 
 # Global email service instance

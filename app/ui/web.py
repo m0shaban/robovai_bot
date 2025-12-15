@@ -327,7 +327,7 @@ async def rotate_tenant_key(
     tenant_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
+    form = dict(await request.form())
     admin_password = form.get("admin_password", "")
     _require_admin_password(admin_password)
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant_id)
@@ -346,8 +346,8 @@ async def update_tenant_web(
     tenant_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    name = form.get("name", "").strip()
+    form = dict(await request.form())
+    name = safe_form_get(form, "name", "").strip()
     admin_password = form.get("admin_password", "")
     
     if not name:
@@ -370,7 +370,7 @@ async def delete_tenant_web(
     tenant_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
+    form = dict(await request.form())
     admin_password = form.get("admin_password", "")
     _require_admin_password(admin_password)
     tenant = await get_tenant_by_id(session=session, tenant_id=tenant_id)
@@ -464,8 +464,8 @@ async def delete_channel_web(
     channel_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
@@ -519,12 +519,12 @@ async def create_quick_reply_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
-    title = form.get("title", "").strip()
-    payload_text = form.get("payload_text", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
+    title = safe_form_get(form, "title", "").strip()
+    payload_text = safe_form_get(form, "payload_text", "").strip()
     sort_order = int(form.get("sort_order", "0") or "0")
-    is_active = form.get("is_active", "true").lower() == "true"
+    is_active = safe_form_get(form, "is_active", "true").lower() == "true"
     
     if not tenant_api_key:
         return jinja_templates.TemplateResponse(
@@ -557,8 +557,8 @@ async def delete_quick_reply_web(
     reply_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
@@ -608,11 +608,11 @@ async def create_rule_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
-    trigger_keyword = form.get("trigger_keyword", "").strip()
-    response_text = form.get("response_text", "").strip()
-    is_active = form.get("is_active", "true").lower() == "true"
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
+    trigger_keyword = safe_form_get(form, "trigger_keyword", "").strip()
+    response_text = safe_form_get(form, "response_text", "").strip()
+    is_active = safe_form_get(form, "is_active", "true").lower() == "true"
     
     if not tenant_api_key:
         return jinja_templates.TemplateResponse(
@@ -644,8 +644,8 @@ async def delete_rule_web(
     rule_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
     
     tenant = await get_tenant_by_api_key(session=session, api_key=tenant_api_key)
     if not tenant:
@@ -807,10 +807,10 @@ async def update_settings_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
-    system_prompt = form.get("system_prompt", "").strip()
-    webhook_url = form.get("webhook_url", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
+    system_prompt = safe_form_get(form, "system_prompt", "").strip()
+    webhook_url = safe_form_get(form, "webhook_url", "").strip()
     
     if not tenant_api_key:
         return jinja_templates.TemplateResponse(
@@ -868,9 +868,9 @@ async def send_test_message(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     """Process test chat message and return AI response"""
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
-    message = form.get("message", "").strip()
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key", "").strip()
+    message = safe_form_get(form, "message", "").strip()
     
     if not tenant_api_key or not message:
         return HTMLResponse(
@@ -962,10 +962,10 @@ async def widget_chat(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     """Handle widget chat messages"""
-    form = await request.form()
-    api_key = form.get("api_key", "").strip()
-    message = form.get("message", "").strip()
-    session_id = form.get("session_id", "").strip()
+    form = dict(await request.form())
+    api_key = safe_form_get(form, "api_key", "").strip()
+    message = safe_form_get(form, "message", "").strip()
+    session_id = safe_form_get(form, "session_id", "").strip()
     
     tenant = await get_tenant_by_api_key(session=session, api_key=api_key)
     if not tenant:
@@ -1020,12 +1020,12 @@ async def templates_add(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     """Add a new message template"""
-    form = await request.form()
-    tenant_id = int(form.get("tenant_id", 0))
-    name = form.get("name", "").strip()
-    category = form.get("category", "general").strip()
-    content = form.get("content", "").strip()
-    variables = form.get("variables", "").strip() or None
+    form = dict(await request.form())
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
+    name = safe_form_get(form, "name", "").strip()
+    category = safe_form_get(form, "category", "general").strip()
+    content = safe_form_get(form, "content", "").strip()
+    variables = safe_form_get(form, "variables", "").strip() or None
     
     if tenant_id and name and content:
         await create_message_template(
@@ -1050,9 +1050,9 @@ async def templates_delete(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     """Delete a message template"""
-    form = await request.form()
-    template_id = int(form.get("template_id", 0))
-    tenant_id = int(form.get("tenant_id", 0))
+    form = dict(await request.form())
+    template_id = int(safe_form_get(form, "template_id", 0))
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
     
     if template_id:
         await delete_message_template(session=session, template_id=template_id)
@@ -1070,8 +1070,8 @@ async def templates_seed(
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
     """Seed default templates for a tenant"""
-    form = await request.form()
-    tenant_id = int(form.get("tenant_id", 0))
+    form = dict(await request.form())
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
     
     if tenant_id:
         await seed_default_templates(session=session, tenant_id=tenant_id)
@@ -1226,10 +1226,10 @@ async def kb_add(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_id = int(form.get("tenant_id", 0))
-    title = form.get("title", "").strip()
-    content = form.get("content", "").strip()
+    form = dict(await request.form())
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
+    title = safe_form_get(form, "title", "").strip()
+    content = safe_form_get(form, "content", "").strip()
     
     if tenant_id and title and content:
         await create_kb_item(
@@ -1251,9 +1251,9 @@ async def kb_delete(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    item_id = int(form.get("item_id", 0))
-    tenant_id = int(form.get("tenant_id", 0))
+    form = dict(await request.form())
+    item_id = int(safe_form_get(form, "item_id", 0))
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
     
     if item_id:
         await delete_kb_item(session=session, kb_id=item_id)
@@ -1299,11 +1299,11 @@ async def broadcasts_create(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_id = int(form.get("tenant_id", 0))
-    name = form.get("name", "").strip()
-    message = form.get("message", "").strip()
-    target_channel = form.get("target_channel", "all").strip()
+    form = dict(await request.form())
+    tenant_id = int(safe_form_get(form, "tenant_id", 0))
+    name = safe_form_get(form, "name", "").strip()
+    message = safe_form_get(form, "message", "").strip()
+    target_channel = safe_form_get(form, "target_channel", "all").strip()
     
     if tenant_id and name and message:
         await create_broadcast(
@@ -1503,5 +1503,7 @@ async def flows_delete(
 router = APIRouter()
 router.include_router(public_router)
 router.include_router(protected_router)
+
+
 
 
