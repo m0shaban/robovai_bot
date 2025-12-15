@@ -68,14 +68,50 @@ async def register_submit(
         error = "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
     elif not terms:
         error = "يجب الموافقة على شروط الاستخدام"
-    elif await user_exists(session, email):
-        error = "البريد الإلكتروني مسجل مسبقاً"
     
     if error:
         return jinja_templates.TemplateResponse(
             "auth/register.html",
             {"request": request, "error": error}
         )
+
+    # Check if user exists
+    existing_user = await get_user_by_email(session, email)
+    if existing_user:
+        if existing_user.is_verified:
+            return jinja_templates.TemplateResponse(
+                "auth/register.html",
+                {"request": request, "error": "البريد الإلكتروني مسجل مسبقاً. يرجى تسجيل الدخول."}
+            )
+        else:
+            # Resend verification email
+            from app.crud.user import generate_verification_token
+            token = await generate_verification_token(session, existing_user)
+            verification_url = f"{request.base_url}ui/auth/verify-email?token={token}"
+            
+            try:
+                sent = await email_service.send_verification_email(
+                    to_email=existing_user.email,
+                    verification_url=verification_url,
+                    user_name=existing_user.full_name,
+                )
+                if sent:
+                    print(f"✅ Verification email resent to {email}")
+                else:
+                    print(f"⚠️  Email service returned False for {email}")
+                    print(f"[DEV] Verification link: {verification_url}")
+            except Exception as e:
+                print(f"⚠️  Failed to resend verification email: {e}")
+                print(f"[DEV] Verification link: {verification_url}")
+            
+            return jinja_templates.TemplateResponse(
+                "auth/register.html",
+                {
+                    "request": request,
+                    "success": True,
+                    "message": "الحساب موجود ولكنه غير مفعل. تم إرسال رابط تفعيل جديد إلى بريدك الإلكتروني."
+                }
+            )
     
     # Create user
     try:
@@ -155,11 +191,33 @@ async def login_submit(
     user = await authenticate_user(session, email, password)
     
     if not user:
+        # Check specific failure reasons for better feedback
+        existing_user = await get_user_by_email(session, email)
+        error_msg = "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+        
+        if existing_user:
+            if not existing_user.is_active:
+                error_msg = "تم تعطيل هذا الحساب. يرجى الاتصال بالدعم."
+            # Note: We don't reveal if password is wrong for security, 
+            # but we do help with account status issues.
+        
         return jinja_templates.TemplateResponse(
             "auth/login.html",
             {
                 "request": request,
-                "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+                "error": error_msg,
+                "email": email,
+                "show_admin_login": True,
+            }
+        )
+    
+    # Check verification status
+    if not user.is_verified:
+        return jinja_templates.TemplateResponse(
+            "auth/login.html",
+            {
+                "request": request,
+                "error": "يرجى تفعيل حسابك أولاً. تحقق من بريدك الإلكتروني.",
                 "email": email,
                 "show_admin_login": True,
             }
