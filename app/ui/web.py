@@ -4,10 +4,10 @@ import secrets
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks, Response, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Form, BackgroundTasks, Response, Body, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security.utils import get_authorization_scheme_param
@@ -19,6 +19,14 @@ from app.core.config import admin_auth_enabled, settings
 from app.core import security
 from app.models.user import User, UserRole
 from app.services.auth_service import get_current_user as get_auth_user, AuthError
+
+
+def safe_form_get(form_data: dict[str, Any], key: str, default: str = "") -> str:
+    """Safely extract string value from form data (handles UploadFile case)."""
+    value = form_data.get(key, default)
+    if isinstance(value, UploadFile):
+        return default
+    return str(value) if value is not None else default
 from app.crud.tenant import (
     create_tenant,
     delete_tenant,
@@ -87,6 +95,7 @@ from app.crud.message_template import (
     list_message_templates,
     seed_default_templates,
 )
+from app.services.broadcast_service import execute_broadcast
 
 # Templates directory (app/templates)
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -287,11 +296,11 @@ async def create_tenant_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    name = form.get("name", "").strip()
-    admin_password = form.get("admin_password", "")
-    system_prompt = form.get("system_prompt") or None
-    webhook_url = form.get("webhook_url") or None
+    form = dict(await request.form())
+    name = safe_form_get(form, "name").strip()
+    admin_password = safe_form_get(form, "admin_password")
+    system_prompt = safe_form_get(form, "system_prompt") or None
+    webhook_url = safe_form_get(form, "webhook_url") or None
     
     if not name:
         raise HTTPException(status_code=400, detail="Name is required")
@@ -412,13 +421,13 @@ async def create_channel_web(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    tenant_api_key = form.get("tenant_api_key", "").strip()
-    channel_type = form.get("channel_type", "").strip().lower()
-    external_id = form.get("external_id", "").strip()
-    access_token = form.get("access_token", "").strip()
-    verify_token = form.get("verify_token", "").strip() or secrets.token_urlsafe(16)
-    is_active = form.get("is_active", "true").lower() == "true"
+    form = dict(await request.form())
+    tenant_api_key = safe_form_get(form, "tenant_api_key").strip()
+    channel_type = safe_form_get(form, "channel_type").strip().lower()
+    external_id = safe_form_get(form, "external_id").strip()
+    access_token = safe_form_get(form, "access_token").strip()
+    verify_token = safe_form_get(form, "verify_token").strip() or secrets.token_urlsafe(16)
+    is_active = safe_form_get(form, "is_active", "true").lower() == "true"
     
     if not tenant_api_key:
         return jinja_templates.TemplateResponse(
@@ -1378,12 +1387,13 @@ async def broadcasts_send(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db_session),
 ) -> HTMLResponse:
-    form = await request.form()
-    broadcast_id = int(form.get("broadcast_id", 0))
-    tenant_id = int(form.get("tenant_id", 0))
+    form = dict(await request.form())
+    broadcast_id = int(safe_form_get(form, "broadcast_id", "0"))
+    tenant_id = int(safe_form_get(form, "tenant_id", "0"))
     
     if broadcast_id and tenant_id:
-        background_tasks.add_task(_execute_broadcast_task, broadcast_id, tenant_id)
+        # Use the new broadcast service
+        background_tasks.add_task(execute_broadcast, session, broadcast_id)
     
     # Return list immediately (status will update on refresh)
     broadcasts = await list_broadcasts(session=session, tenant_id=tenant_id)

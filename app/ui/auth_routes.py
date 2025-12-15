@@ -27,6 +27,7 @@ from app.services.auth_service import (
     get_current_user,
 )
 from app.crud.user import update_last_login
+from app.services.email_service import email_service
 
 # Templates
 jinja_templates = Jinja2Templates(directory="app/templates")
@@ -85,32 +86,34 @@ async def register_submit(
             full_name=full_name,
             phone=phone,
             role=UserRole.AGENT,  # Default role
-            is_verified=True,  # Auto-verify for now (no email service)
+            is_verified=False,  # Require email verification
         )
         
-        # Auto-login after registration
-        await update_last_login(session, user)
-        tokens = create_token_pair(user)
+        # Send verification email
+        from app.crud.user import generate_verification_token
+        token = await generate_verification_token(session, user)
+        verification_url = f"{request.base_url}ui/auth/verify-email?token={token}"
         
-        response = RedirectResponse(
-            url="/ui/dashboard",
-            status_code=status.HTTP_303_SEE_OTHER
+        try:
+            await email_service.send_verification_email(
+                to_email=user.email,
+                verification_url=verification_url,
+                user_name=user.full_name,
+            )
+            print(f"✅ Verification email sent to {email}")
+        except Exception as e:
+            print(f"⚠️  Failed to send verification email: {e}")
+            print(f"[DEV] Verification link: {verification_url}")
+        
+        # Show success message (don't auto-login until verified)
+        return jinja_templates.TemplateResponse(
+            "auth/register.html",
+            {
+                "request": request,
+                "success": True,
+                "message": "تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب."
+            }
         )
-        response.set_cookie(
-            key="access_token",
-            value=tokens.access_token,
-            httponly=True,
-            max_age=tokens.expires_in,
-            samesite="lax"
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=tokens.refresh_token,
-            httponly=True,
-            max_age=60 * 60 * 24 * 7,  # 7 days
-            samesite="lax"
-        )
-        return response
         
     except Exception as e:
         return jinja_templates.TemplateResponse(
@@ -227,9 +230,19 @@ async def forgot_password_submit(
     if user:
         # Generate reset token
         token = await generate_reset_token(session, user)
-        # TODO: Send email with reset link
-        # For now, we just show success message
-        print(f"[DEV] Password reset token for {email}: {token}")
+        
+        # Send email with reset link
+        reset_url = f"{request.base_url}ui/auth/reset-password?token={token}"
+        try:
+            await email_service.send_password_reset_email(
+                to_email=user.email,
+                reset_url=reset_url,
+                user_name=user.full_name,
+            )
+            print(f"✅ Password reset email sent to {email}")
+        except Exception as e:
+            print(f"⚠️  Failed to send email: {e}")
+            print(f"[DEV] Password reset token for {email}: {token}")
     
     # Always show success (don't reveal if email exists)
     return jinja_templates.TemplateResponse(
