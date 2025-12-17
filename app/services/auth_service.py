@@ -166,7 +166,7 @@ async def register_user(
     data: UserRegisterRequest,
     tenant_id: Optional[int] = None,
     role: UserRole = UserRole.AGENT,
-    auto_verify: bool = False,
+    auto_verify: bool = True,  # Changed default to True to bypass email verification
     base_url: Optional[str] = None,
 ) -> UserRegisterResponse:
     """Register a new user and send verification email."""

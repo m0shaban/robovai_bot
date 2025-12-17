@@ -125,38 +125,21 @@ async def register_submit(
             full_name=full_name,
             phone=phone,
             role=UserRole.AGENT,  # Default role
-            is_verified=False,  # Require email verification
+            is_verified=True,  # Auto-verify, skip email verification
         )
 
-        # Send verification email
-        from app.crud.user import generate_verification_token
+        # Skip sending verification email
+        # from app.crud.user import generate_verification_token
+        # token = await generate_verification_token(session, user)
+        # ...
 
-        token = await generate_verification_token(session, user)
-        verification_url = f"{request.base_url}ui/auth/verify-email?token={token}"
-
-        try:
-            sent = await email_service.send_verification_email(
-                to_email=user.email,
-                verification_url=verification_url,
-                user_name=user.full_name,
-            )
-            if sent:
-                print(f"✅ Verification email sent to {email}")
-            else:
-                print(f"⚠️  Email service returned False for {email}")
-                print(f"[DEV] Verification link: {verification_url}")
-        except Exception as e:
-            print(f"⚠️  Failed to send verification email: {e}")
-            print(f"[DEV] Verification link: {verification_url}")
-
-        # Show success message (don't auto-login until verified)
+        # Show success message and redirect to login
         return jinja_templates.TemplateResponse(
-            "auth/register.html",
+            "auth/login.html",
             {
                 "request": request,
-                "success": True,
-                "message": "تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.",
-                "user_email": email,
+                "success": "تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.",
+                "email": email,
             },
         )
 
