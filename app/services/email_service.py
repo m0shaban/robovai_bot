@@ -307,16 +307,36 @@ class EmailService:
                 # Create secure SSL context
                 context = ssl.create_default_context()
                 
+                # Resolve to IPv4 to avoid IPv6 routing issues on Render
+                target_host = smtp_host
+                try:
+                    # Filter for IPv4 (AF_INET)
+                    addr_info = socket.getaddrinfo(smtp_host, smtp_port, socket.AF_INET, socket.SOCK_STREAM)
+                    if addr_info:
+                        target_host = addr_info[0][4][0]
+                        if target_host != smtp_host:
+                            logger.debug(f"Resolved {smtp_host} to {target_host} (IPv4) to avoid routing issues")
+                except Exception as e:
+                    logger.warning(f"DNS resolution warning: {e}")
+
                 if smtp_port == 465:
                     # Gmail SSL (implicit TLS)
                     logger.debug(f"Connecting to Gmail via SSL on port {smtp_port}")
+                    # Note: For SSL port 465, we stick to hostname to ensure SSL context works automatically
+                    # If IPv6 issues persist on 465, we might need a more complex fix.
                     with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context, timeout=30) as server:
                         server.login(smtp_user, smtp_password)
                         server.send_message(message)
                 else:
                     # Gmail STARTTLS (explicit TLS) - Port 587
                     logger.debug(f"Connecting to Gmail via STARTTLS on port {smtp_port}")
-                    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                    
+                    # Use target_host (IPv4) to bypass potential IPv6 routing issues
+                    with smtplib.SMTP(target_host, smtp_port, timeout=30) as server:
+                        if target_host != smtp_host:
+                            # Hack: Restore original hostname for SSL verification
+                            server._host = smtp_host
+                        
                         server.ehlo("localhost")
                         server.starttls(context=context)
                         server.ehlo("localhost")
