@@ -113,7 +113,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
+# Mount API router with /api prefix so paths are /api/v1/...
+app.include_router(api_router, prefix="/api")
 app.include_router(health_router)
 app.include_router(webhooks_router)
 app.include_router(ui_router)
