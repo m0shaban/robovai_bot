@@ -20,7 +20,7 @@ async def create_message_template(
         cat = TemplateCategory(category)
     except ValueError:
         cat = TemplateCategory.general
-    
+
     obj = MessageTemplate(
         tenant_id=tenant_id,
         name=name,
@@ -44,17 +44,17 @@ async def list_message_templates(
 ) -> list[MessageTemplate]:
     """List message templates for a tenant"""
     stmt = select(MessageTemplate).where(MessageTemplate.tenant_id == tenant_id)
-    
+
     if category:
         try:
             cat = TemplateCategory(category)
             stmt = stmt.where(MessageTemplate.category == cat)
         except ValueError:
             pass
-    
+
     if active_only:
         stmt = stmt.where(MessageTemplate.is_active == True)
-    
+
     stmt = stmt.order_by(MessageTemplate.category, MessageTemplate.name)
     result = await session.execute(stmt)
     return list(result.scalars().all())
@@ -83,10 +83,12 @@ async def update_message_template(
     is_active: bool | None = None,
 ) -> MessageTemplate | None:
     """Update a message template"""
-    template = await get_message_template_by_id(session=session, template_id=template_id)
+    template = await get_message_template_by_id(
+        session=session, template_id=template_id
+    )
     if not template:
         return None
-    
+
     if name is not None:
         template.name = name
     if category is not None:
@@ -100,7 +102,7 @@ async def update_message_template(
         template.variables = variables
     if is_active is not None:
         template.is_active = is_active
-    
+
     await session.commit()
     await session.refresh(template)
     return template
@@ -112,10 +114,12 @@ async def delete_message_template(
     template_id: int,
 ) -> bool:
     """Delete a message template"""
-    template = await get_message_template_by_id(session=session, template_id=template_id)
+    template = await get_message_template_by_id(
+        session=session, template_id=template_id
+    )
     if not template:
         return False
-    
+
     await session.delete(template)
     await session.commit()
     return True
@@ -127,7 +131,7 @@ async def seed_default_templates(
     tenant_id: int,
 ) -> list[MessageTemplate]:
     """Create default templates for a new tenant"""
-    
+
     default_templates = [
         # ترحيب
         {
@@ -217,7 +221,7 @@ async def seed_default_templates(
             "variables": "working_hours",
         },
     ]
-    
+
     created = []
     for tmpl in default_templates:
         obj = await create_message_template(
@@ -226,5 +230,5 @@ async def seed_default_templates(
             **tmpl,
         )
         created.append(obj)
-    
+
     return created

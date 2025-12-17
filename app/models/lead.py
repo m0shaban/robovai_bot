@@ -27,7 +27,9 @@ class Lead(Base):
         BigInteger, ForeignKey("flows.id", ondelete="SET NULL"), nullable=True
     )
     current_step_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    flow_context: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    flow_context: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
 
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

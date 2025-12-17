@@ -1,112 +1,143 @@
-{% extends "base.html" %}
-{% block title %}ويدجت الشات - RoboVAI{% endblock %}
+{% extends "base.html" %} {% block title %}ويدجت الشات - RoboVAI{% endblock %}
 {% block content %}
 <div class="grid lg:grid-cols-2 gap-6">
-    <!-- إعدادات الويدجت -->
+  <!-- إعدادات الويدجت -->
+  <div class="glass-card p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-50">🔌 ويدجت الشات</h1>
+        <p class="text-slate-400 text-sm mt-1">
+          أضف شات بوت ذكي لموقعك في دقيقة
+        </p>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <label class="label">اختر المشروع</label>
+      <select
+        id="tenant_select"
+        class="select-field"
+        onchange="generateWidget()"
+      >
+        <option value="">-- اختر مشروعاً --</option>
+        {% for tenant in tenants %}
+        <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div id="widget-code">
+      <div class="text-center py-12 text-slate-400">
+        <div class="text-5xl mb-4">🔌</div>
+        <p>اختر مشروعاً لإنشاء كود الويدجت</p>
+      </div>
+    </div>
+
+    <!-- تعليمات التثبيت -->
+    <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
+      <h3 class="font-semibold text-blue-300 mb-2">📋 طريقة التثبيت</h3>
+      <ol class="text-sm text-slate-400 space-y-2 list-decimal list-inside">
+        <li>اختر المشروع من القائمة أعلاه</li>
+        <li>انسخ الكود الذي سيظهر</li>
+        <li>الصقه قبل &lt;/body&gt; في موقعك</li>
+        <li>احفظ وانشر - الويدجت جاهز!</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- معاينة الويدجت -->
+  <div class="space-y-6">
     <div class="glass-card p-6">
-        <div class="flex items-center justify-between mb-6">
+      <h3 class="font-semibold text-slate-50 mb-4">👁️ معاينة الويدجت</h3>
+      <div class="bg-slate-900 rounded-xl p-4 min-h-96 relative">
+        <!-- Widget Preview -->
+        <div class="absolute bottom-4 left-4">
+          <div
+            class="w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 flex items-center justify-center text-2xl shadow-lg cursor-pointer hover:scale-110 transition-transform"
+          >
+            💬
+          </div>
+        </div>
+
+        <!-- Chat Window Preview -->
+        <div
+          class="absolute bottom-20 left-4 w-80 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden"
+        >
+          <div
+            class="bg-gradient-to-r from-cyan-600 to-indigo-600 p-3 flex items-center gap-2"
+          >
+            <div
+              class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+            >
+              🤖
+            </div>
             <div>
-                <h1 class="text-2xl font-bold text-slate-50">🔌 ويدجت الشات</h1>
-                <p class="text-slate-400 text-sm mt-1">أضف شات بوت ذكي لموقعك في دقيقة</p>
+              <div class="font-semibold text-white text-sm">RoboVAI</div>
+              <div class="text-xs text-white/70">متصل</div>
             </div>
-        </div>
-
-        <div class="mb-6">
-            <label class="label">اختر المشروع</label>
-            <select id="tenant_select" class="select-field" onchange="generateWidget()">
-                <option value="">-- اختر مشروعاً --</option>
-                {% for tenant in tenants %}
-                <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div id="widget-code">
-            <div class="text-center py-12 text-slate-400">
-                <div class="text-5xl mb-4">🔌</div>
-                <p>اختر مشروعاً لإنشاء كود الويدجت</p>
+          </div>
+          <div class="p-3 h-48 overflow-y-auto">
+            <div
+              class="bg-slate-700 rounded-lg rounded-tr-sm px-3 py-2 text-sm text-slate-200 max-w-[80%]"
+            >
+              مرحباً! 👋 كيف يمكنني مساعدتك؟
             </div>
+          </div>
+          <div class="p-2 border-t border-slate-700">
+            <div class="flex gap-2">
+              <input
+                type="text"
+                placeholder="اكتب رسالتك..."
+                class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-900 border border-slate-600 text-slate-300"
+                disabled
+              />
+              <button
+                class="px-3 py-2 bg-cyan-600 rounded-lg text-white text-sm"
+                disabled
+              >
+                إرسال
+              </button>
+            </div>
+          </div>
         </div>
-
-        <!-- تعليمات التثبيت -->
-        <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
-            <h3 class="font-semibold text-blue-300 mb-2">📋 طريقة التثبيت</h3>
-            <ol class="text-sm text-slate-400 space-y-2 list-decimal list-inside">
-                <li>اختر المشروع من القائمة أعلاه</li>
-                <li>انسخ الكود الذي سيظهر</li>
-                <li>الصقه قبل &lt;/body&gt; في موقعك</li>
-                <li>احفظ وانشر - الويدجت جاهز!</li>
-            </ol>
-        </div>
+      </div>
     </div>
 
-    <!-- معاينة الويدجت -->
-    <div class="space-y-6">
-        <div class="glass-card p-6">
-            <h3 class="font-semibold text-slate-50 mb-4">👁️ معاينة الويدجت</h3>
-            <div class="bg-slate-900 rounded-xl p-4 min-h-96 relative">
-                <!-- Widget Preview -->
-                <div class="absolute bottom-4 left-4">
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 flex items-center justify-center text-2xl shadow-lg cursor-pointer hover:scale-110 transition-transform">
-                        💬
-                    </div>
-                </div>
-                
-                <!-- Chat Window Preview -->
-                <div class="absolute bottom-20 left-4 w-80 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
-                    <div class="bg-gradient-to-r from-cyan-600 to-indigo-600 p-3 flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">🤖</div>
-                        <div>
-                            <div class="font-semibold text-white text-sm">RoboVAI</div>
-                            <div class="text-xs text-white/70">متصل</div>
-                        </div>
-                    </div>
-                    <div class="p-3 h-48 overflow-y-auto">
-                        <div class="bg-slate-700 rounded-lg rounded-tr-sm px-3 py-2 text-sm text-slate-200 max-w-[80%]">
-                            مرحباً! 👋 كيف يمكنني مساعدتك؟
-                        </div>
-                    </div>
-                    <div class="p-2 border-t border-slate-700">
-                        <div class="flex gap-2">
-                            <input type="text" placeholder="اكتب رسالتك..." class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-900 border border-slate-600 text-slate-300" disabled />
-                            <button class="px-3 py-2 bg-cyan-600 rounded-lg text-white text-sm" disabled>إرسال</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- المنصات المدعومة -->
+    <div class="glass-card p-6">
+      <h3 class="font-semibold text-slate-50 mb-4">🌐 يعمل على</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+          <div class="text-2xl mb-1">📝</div>
+          <div class="text-sm text-slate-300">Blogger</div>
         </div>
-
-        <!-- المنصات المدعومة -->
-        <div class="glass-card p-6">
-            <h3 class="font-semibold text-slate-50 mb-4">🌐 يعمل على</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div class="text-2xl mb-1">📝</div>
-                    <div class="text-sm text-slate-300">Blogger</div>
-                </div>
-                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div class="text-2xl mb-1">🔷</div>
-                    <div class="text-sm text-slate-300">WordPress</div>
-                </div>
-                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div class="text-2xl mb-1">🛒</div>
-                    <div class="text-sm text-slate-300">Shopify</div>
-                </div>
-                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div class="text-2xl mb-1">🌍</div>
-                    <div class="text-sm text-slate-300">أي موقع HTML</div>
-                </div>
-            </div>
+        <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+          <div class="text-2xl mb-1">🔷</div>
+          <div class="text-sm text-slate-300">WordPress</div>
         </div>
+        <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+          <div class="text-2xl mb-1">🛒</div>
+          <div class="text-sm text-slate-300">Shopify</div>
+        </div>
+        <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+          <div class="text-2xl mb-1">🌍</div>
+          <div class="text-sm text-slate-300">أي موقع HTML</div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
-function generateWidget() {
+  function generateWidget() {
     const apiKey = document.getElementById('tenant_select').value;
     if (apiKey) {
-        htmx.ajax('GET', '/ui/widget/generate?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#widget-code'});
+      htmx.ajax(
+        'GET',
+        '/ui/widget/generate?tenant_api_key=' + encodeURIComponent(apiKey),
+        { target: '#widget-code' }
+      );
     }
-}
+  }
 </script>
 {% endblock %}

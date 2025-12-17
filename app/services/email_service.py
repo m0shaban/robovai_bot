@@ -1,14 +1,23 @@
 """
 Email service for sending verification and password reset emails.
-Supports both SMTP and SendGrid backends.
+Supports Gmail SMTP, generic SMTP, and SendGrid backends.
+
+Gmail SMTP Configuration:
+- Enable 2-Step Verification in your Google account
+- Generate an App Password: https://myaccount.google.com/apppasswords
+- Use the app password as SMTP_PASSWORD (not your Gmail password)
 """
+
 from __future__ import annotations
 
 import logging
 import os
 import smtplib
+import ssl
 import asyncio
 from email.message import EmailMessage
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 import httpx
@@ -19,14 +28,35 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Email service with multiple backend support."""
+    """
+    Email service with multiple backend support.
     
+    Priority order:
+    1. SendGrid API (if SENDGRID_API_KEY is set)
+    2. Gmail SMTP (if using smtp.gmail.com)
+    3. Generic SMTP (any other SMTP server)
+    """
+
     def __init__(self):
-        self.smtp_enabled = bool(settings.smtp_host)
+        self.smtp_enabled = bool(settings.smtp_host and settings.smtp_user and settings.smtp_password)
         self.sendgrid_enabled = bool(settings.sendgrid_api_key)
-        self.from_email = settings.email_from
-        self.from_name = settings.email_from_name
+        self.from_email = settings.email_from or settings.smtp_user
+        self.from_name = settings.email_from_name or "RoboVAI"
         
+        # Gmail specific settings
+        self.is_gmail = settings.smtp_host.lower() in ['smtp.gmail.com', 'smtp.googlemail.com'] if settings.smtp_host else False
+        
+        # Log configuration status
+        if self.sendgrid_enabled:
+            logger.info("📧 Email service: SendGrid API enabled")
+        elif self.smtp_enabled:
+            if self.is_gmail:
+                logger.info("📧 Email service: Gmail SMTP enabled")
+            else:
+                logger.info(f"📧 Email service: SMTP enabled ({settings.smtp_host})")
+        else:
+            logger.warning("⚠️ Email service: No email backend configured!")
+
     async def send_verification_email(
         self,
         to_email: str,
@@ -65,9 +95,9 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         return await self._send_email(to_email, subject, html_content)
-    
+
     async def send_password_reset_email(
         self,
         to_email: str,
@@ -110,9 +140,9 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         return await self._send_email(to_email, subject, html_content)
-    
+
     async def _send_email(
         self,
         to_email: str,
@@ -120,23 +150,31 @@ class EmailService:
         html_content: str,
     ) -> bool:
         """Send email using available backend."""
-        
-        # Try SendGrid first (preferred)
+
+        # Try SendGrid first (preferred for production)
         if self.sendgrid_enabled:
-            return await self._send_via_sendgrid(to_email, subject, html_content)
-        
-        # Fallback to SMTP
+            result = await self._send_via_sendgrid(to_email, subject, html_content)
+            if result:
+                return True
+            # Fallback to SMTP if SendGrid fails
+            logger.warning("SendGrid failed, trying SMTP fallback...")
+
+        # Try SMTP (Gmail or generic)
         if self.smtp_enabled:
-            return await self._send_via_smtp(to_email, subject, html_content)
-        
+            if self.is_gmail:
+                return await self._send_via_gmail(to_email, subject, html_content)
+            else:
+                return await self._send_via_smtp(to_email, subject, html_content)
+
         # No email backend configured - log for development
         logger.warning(
-            f"[DEV] Email would be sent to {to_email}\n"
+            f"[DEV MODE] Email would be sent to {to_email}\n"
             f"Subject: {subject}\n"
-            f"Configure SMTP_HOST or SENDGRID_API_KEY to enable emails."
+            f"Configure SMTP_HOST, SMTP_USER, SMTP_PASSWORD or SENDGRID_API_KEY to enable emails.\n"
+            f"For Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_TLS=true"
         )
         return False
-    
+
     async def _send_via_sendgrid(
         self,
         to_email: str,
@@ -146,14 +184,14 @@ class EmailService:
         """Send email via SendGrid API."""
         api_key = settings.sendgrid_api_key
         url = "https://api.sendgrid.com/v3/mail/send"
-        
+
         payload = {
             "personalizations": [{"to": [{"email": to_email}]}],
             "from": {"email": self.from_email, "name": self.from_name},
             "subject": subject,
             "content": [{"type": "text/html", "value": html_content}],
         }
-        
+
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -170,46 +208,146 @@ class EmailService:
         except Exception as e:
             logger.error(f"❌ SendGrid error: {e}")
             return False
-    
+
     async def _send_via_smtp(
         self,
         to_email: str,
         subject: str,
         html_content: str,
     ) -> bool:
-        """Send email via SMTP (using standard library in thread pool)."""
+        """Send email via generic SMTP server."""
         try:
-            message = EmailMessage()
+            # Create MIME message
+            message = MIMEMultipart("alternative")
             message["From"] = f"{self.from_name} <{self.from_email}>"
             message["To"] = to_email
             message["Subject"] = subject
-            message.set_content(html_content, subtype="html")
+            
+            # Attach HTML content
+            html_part = MIMEText(html_content, "html", "utf-8")
+            message.attach(html_part)
 
             def send_sync():
-                # Connect to SMTP server
-                with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
-                    # Identify ourselves
-                    server.ehlo()
-                    
-                    # Start TLS if enabled (standard for port 587)
-                    if settings.smtp_tls:
-                        server.starttls()
-                        server.ehlo()  # Re-identify after TLS
-                    
-                    # Login if credentials provided
-                    if settings.smtp_user and settings.smtp_password:
-                        server.login(settings.smtp_user, settings.smtp_password)
-                    
-                    # Send
-                    server.send_message(message)
+                """Synchronous SMTP send function."""
+                smtp_host = settings.smtp_host
+                smtp_port = settings.smtp_port
+                
+                # Determine connection type based on port
+                if smtp_port == 465:
+                    # SSL connection (implicit TLS)
+                    context = ssl.create_default_context()
+                    with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+                        if settings.smtp_user and settings.smtp_password:
+                            server.login(settings.smtp_user, settings.smtp_password)
+                        server.send_message(message)
+                else:
+                    # Standard connection with optional STARTTLS (port 587)
+                    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                        server.ehlo()
+                        if settings.smtp_tls:
+                            context = ssl.create_default_context()
+                            server.starttls(context=context)
+                            server.ehlo()
+                        if settings.smtp_user and settings.smtp_password:
+                            server.login(settings.smtp_user, settings.smtp_password)
+                        server.send_message(message)
 
             # Run blocking SMTP call in a separate thread
             await asyncio.to_thread(send_sync)
-            logger.info(f"✅ Email sent to {to_email} via SMTP")
+            logger.info(f"✅ Email sent to {to_email} via SMTP ({settings.smtp_host})")
             return True
 
-        except Exception as e:
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"❌ SMTP Authentication failed: {e}")
+            logger.error("💡 For Gmail: Make sure you're using an App Password, not your regular password")
+            return False
+        except smtplib.SMTPException as e:
             logger.error(f"❌ SMTP error: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ SMTP unexpected error: {e}")
+            return False
+
+    async def _send_via_gmail(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+    ) -> bool:
+        """
+        Send email via Gmail SMTP with proper SSL/TLS handling.
+        
+        Gmail requires:
+        - 2-Step Verification enabled on Google account
+        - App Password (not regular Gmail password)
+        - Port 587 with STARTTLS or Port 465 with SSL
+        """
+        try:
+            # Create MIME message
+            message = MIMEMultipart("alternative")
+            message["From"] = f"{self.from_name} <{self.from_email}>"
+            message["To"] = to_email
+            message["Subject"] = subject
+            
+            # Add plain text fallback
+            plain_text = f"Subject: {subject}\n\nPlease view this email in an HTML-capable email client."
+            plain_part = MIMEText(plain_text, "plain", "utf-8")
+            html_part = MIMEText(html_content, "html", "utf-8")
+            
+            message.attach(plain_part)
+            message.attach(html_part)
+
+            def send_sync():
+                """Synchronous Gmail send function."""
+                smtp_host = settings.smtp_host
+                smtp_port = settings.smtp_port
+                smtp_user = settings.smtp_user
+                smtp_password = settings.smtp_password
+                
+                # Create secure SSL context
+                context = ssl.create_default_context()
+                
+                if smtp_port == 465:
+                    # Gmail SSL (implicit TLS)
+                    logger.debug(f"Connecting to Gmail via SSL on port {smtp_port}")
+                    with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context, timeout=30) as server:
+                        server.login(smtp_user, smtp_password)
+                        server.send_message(message)
+                else:
+                    # Gmail STARTTLS (explicit TLS) - Port 587
+                    logger.debug(f"Connecting to Gmail via STARTTLS on port {smtp_port}")
+                    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                        server.ehlo("localhost")
+                        server.starttls(context=context)
+                        server.ehlo("localhost")
+                        server.login(smtp_user, smtp_password)
+                        server.send_message(message)
+
+            # Run blocking SMTP call in a separate thread
+            await asyncio.to_thread(send_sync)
+            logger.info(f"✅ Email sent to {to_email} via Gmail SMTP")
+            return True
+
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"❌ Gmail Authentication failed: {e}")
+            logger.error(
+                "💡 Gmail requires an App Password:\n"
+                "   1. Enable 2-Step Verification: https://myaccount.google.com/security\n"
+                "   2. Generate App Password: https://myaccount.google.com/apppasswords\n"
+                "   3. Use the 16-character app password as SMTP_PASSWORD"
+            )
+            return False
+        except smtplib.SMTPRecipientsRefused as e:
+            logger.error(f"❌ Gmail rejected recipient {to_email}: {e}")
+            return False
+        except smtplib.SMTPSenderRefused as e:
+            logger.error(f"❌ Gmail rejected sender {self.from_email}: {e}")
+            return False
+        except smtplib.SMTPException as e:
+            logger.error(f"❌ Gmail SMTP error: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Gmail unexpected error: {type(e).__name__}: {e}")
             return False
 
 

@@ -1,38 +1,61 @@
 {% if error %}
-<div class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm">
-    ⚠️ {{ error }}
+<div
+  class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm"
+>
+  ⚠️ {{ error }}
 </div>
 {% elif replies %}
 <div class="space-y-3">
-    {% for reply in replies %}
-    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-xl text-purple-400">
-                    ⚡
-                </div>
-                <div>
-                    <div class="font-semibold text-slate-200">{{ reply.title }}</div>
-                    <div class="text-sm text-slate-400 mt-1">{{ reply.payload_text[:50] }}{% if reply.payload_text|length > 50 %}...{% endif %}</div>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">ترتيب: {{ reply.sort_order }}</span>
-                <form method="POST" action="/ui/quick-replies/{{ reply.id }}/delete" class="inline">
-                    <input type="hidden" name="tenant_api_key" value="{{ tenant.api_key }}" />
-                    <button type="submit" onclick="return confirm('حذف هذا الرد السريع؟')" class="btn-danger">
-                        🗑️ حذف
-                    </button>
-                </form>
-            </div>
+  {% for reply in replies %}
+  <div
+    class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-xl text-purple-400"
+        >
+          ⚡
         </div>
+        <div>
+          <div class="font-semibold text-slate-200">{{ reply.title }}</div>
+          <div class="text-sm text-slate-400 mt-1">
+            {{ reply.payload_text[:50] }}{% if reply.payload_text|length > 50
+            %}...{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300"
+          >ترتيب: {{ reply.sort_order }}</span
+        >
+        <form
+          method="POST"
+          action="/ui/quick-replies/{{ reply.id }}/delete"
+          class="inline"
+        >
+          <input
+            type="hidden"
+            name="tenant_api_key"
+            value="{{ tenant.api_key }}"
+          />
+          <button
+            type="submit"
+            onclick="return confirm('حذف هذا الرد السريع؟')"
+            class="btn-danger"
+          >
+            🗑️ حذف
+          </button>
+        </form>
+      </div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
 {% else %}
 <div class="text-center py-8 text-slate-400">
-    <div class="text-4xl mb-3">⚡</div>
-    <p>لا توجد ردود سريعة</p>
-    <p class="text-sm mt-1">أضف أول رد من النموذج الجانبي</p>
+  <div class="text-4xl mb-3">⚡</div>
+  <p>لا توجد ردود سريعة</p>
+  <p class="text-sm mt-1">أضف أول رد من النموذج الجانبي</p>
 </div>
 {% endif %}

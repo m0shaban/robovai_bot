@@ -3,6 +3,7 @@
 ## Page Flow & Screenshots
 
 ### 1. 🏠 First Visit (Onboarding)
+
 **URL**: `http://localhost:8000/ui/`
 
 ```
@@ -43,6 +44,7 @@
 ---
 
 ### 2. 👥 Tenants Page
+
 **URL**: `http://localhost:8000/ui/tenants`
 
 ```
@@ -74,6 +76,7 @@
 ```
 
 **Features**:
+
 - ✅ Create new tenant with name + admin password
 - ✅ Copy API key with one click (shows "✓ Copied!")
 - ✅ Edit tenant name
@@ -83,6 +86,7 @@
 ---
 
 ### 3. 📱 Channels Page
+
 **URL**: `http://localhost:8000/ui/channels`
 
 ```
@@ -114,6 +118,7 @@
 ```
 
 **Features**:
+
 - ✅ Add Telegram, WhatsApp, or Meta Messenger
 - ✅ Copy webhook URL to configure in channel
 - ✅ Rotate verify token for security
@@ -122,6 +127,7 @@
 ---
 
 ### 4. ⚡ Quick Replies Page
+
 **URL**: `http://localhost:8000/ui/quick-replies`
 
 ```
@@ -153,6 +159,7 @@
 ```
 
 **Features**:
+
 - ✅ Add custom button text
 - ✅ Buttons appear in chat interface
 - ✅ Edit or delete quick replies
@@ -161,6 +168,7 @@
 ---
 
 ### 5. 📋 Rules Page
+
 **URL**: `http://localhost:8000/ui/rules`
 
 ```
@@ -194,6 +202,7 @@
 ```
 
 **Features**:
+
 - ✅ Keyword-triggered auto-responses
 - ✅ Set priority (higher = checked first)
 - ✅ Enable/disable rules
@@ -202,6 +211,7 @@
 ---
 
 ### 6. 👤 Leads Page
+
 **URL**: `http://localhost:8000/ui/leads`
 
 ```
@@ -229,6 +239,7 @@
 ```
 
 **Features**:
+
 - ✅ View all captured customer data
 - ✅ Filter by tenant
 - ✅ Export functionality (future)
@@ -237,6 +248,7 @@
 ---
 
 ### 7. 💬 Chat Logs Page
+
 **URL**: `http://localhost:8000/ui/chatlogs`
 
 ```
@@ -266,6 +278,7 @@
 ```
 
 **Features**:
+
 - ✅ View all messages (user + bot)
 - ✅ Filter by tenant
 - ✅ See channel source
@@ -274,6 +287,7 @@
 ---
 
 ### 8. ⚙️ Settings Page
+
 **URL**: `http://localhost:8000/ui/settings`
 
 ```
@@ -306,6 +320,7 @@
 ```
 
 **Features**:
+
 - ✅ Customize AI personality per tenant
 - ✅ Set custom webhook for events
 - ✅ HTMX saves without reload
@@ -316,6 +331,7 @@
 ## 🎨 Design Highlights
 
 ### Color Scheme
+
 - **Background**: Dark slate (`#0f172a`)
 - **Cards**: Semi-transparent white (`rgba(255,255,255,0.03)`)
 - **Primary**: Cyan to Indigo gradient
@@ -324,6 +340,7 @@
 - **Tips**: Blue background (`#1e3a8a`)
 
 ### Interactive Elements
+
 - **Buttons**: Hover effects with color transitions
 - **Copy buttons**: Change to "✓ Copied!" on click
 - **Forms**: HTMX submits without page reload
@@ -332,6 +349,7 @@
 - **Tooltips**: Appear on hover with delay
 
 ### Responsive Design
+
 - **Mobile**: Single column, stacked forms
 - **Tablet**: Two-column layout where appropriate
 - **Desktop**: Full width with max 7xl container
@@ -390,18 +408,23 @@ User Flow:
 ## 📝 Page-to-Page Links
 
 ### From Onboarding
+
 - "Create Your First Tenant" → `/ui/tenants`
 
 ### From Tenants
+
 - After creating tenant → User manually goes to Channels
 
 ### From Channels
+
 - "Configure in Telegram" → External link to @BotFather
 
 ### From Settings
+
 - No external links, saves in-place
 
 ### Navigation Bar (All Pages)
+
 - Always accessible at top
 - Links to all 7 pages
 - Tooltips explain each page
@@ -411,6 +434,7 @@ User Flow:
 ## ✅ Final Checklist
 
 Before launching, verify:
+
 - [ ] Onboarding page shows on first visit
 - [ ] Can create tenant with admin password
 - [ ] Copy button copies API key successfully

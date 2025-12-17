@@ -1,25 +1,40 @@
-{% extends "base.html" %}
-{% block title %}المشاريع - RoboVAI{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}المشاريع - RoboVAI{% endblock %} {%
+block content %}
 <!-- رسالة ترحيب للمستخدمين الجدد -->
 {% if tenants|length == 0 %}
-<div class="bg-gradient-to-r from-cyan-900/30 to-indigo-900/30 border border-cyan-700/50 rounded-2xl p-6 mb-6">
+<div
+  class="bg-gradient-to-r from-cyan-900/30 to-indigo-900/30 border border-cyan-700/50 rounded-2xl p-6 mb-6"
+>
   <div class="flex items-start gap-4">
     <div class="text-5xl">🚀</div>
     <div>
-      <h3 class="text-xl font-bold text-slate-50 mb-2">مرحباً بك في RoboVAI!</h3>
-      <p class="text-slate-300 mb-4">ابدأ بإنشاء مشروعك الأول. كل مشروع يمثل بوت منفصل بإعداداته وبياناته الخاصة.</p>
+      <h3 class="text-xl font-bold text-slate-50 mb-2">
+        مرحباً بك في RoboVAI!
+      </h3>
+      <p class="text-slate-300 mb-4">
+        ابدأ بإنشاء مشروعك الأول. كل مشروع يمثل بوت منفصل بإعداداته وبياناته
+        الخاصة.
+      </p>
       <ol class="text-sm text-slate-400 space-y-2">
         <li class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
+          <span
+            class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs"
+            >1</span
+          >
           أنشئ مشروعاً جديداً من النموذج الجانبي
         </li>
         <li class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
+          <span
+            class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs"
+            >2</span
+          >
           احفظ API Key للاستخدام لاحقاً
         </li>
         <li class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">3</span>
+          <span
+            class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs"
+            >3</span
+          >
           اربط القنوات وخصص الإعدادات
         </li>
       </ol>
@@ -34,53 +49,82 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-50">👥 المشاريع</h1>
-        <p class="text-slate-400 text-sm mt-1">إجمالي {{ tenants|length }} مشروع</p>
+        <p class="text-slate-400 text-sm mt-1">
+          إجمالي {{ tenants|length }} مشروع
+        </p>
       </div>
-      <button class="btn-secondary text-sm" hx-get="/ui/tenants/rows" hx-target="#tenant-rows" hx-swap="innerHTML">
+      <button
+        class="btn-secondary text-sm"
+        hx-get="/ui/tenants/rows"
+        hx-target="#tenant-rows"
+        hx-swap="innerHTML"
+      >
         🔄 تحديث
       </button>
     </div>
 
-    <div id="tenant-rows">
-      {% include "_tenant_rows.html" %}
-    </div>
+    <div id="tenant-rows">{% include "_tenant_rows.html" %}</div>
   </div>
 
   <!-- نموذج إضافة مشروع -->
   <div class="glass-card p-6">
     <h2 class="text-xl font-bold text-slate-50 mb-4">➕ مشروع جديد</h2>
-    
+
     {% if admin_protected %}
     <div class="mb-4">
       <label class="label">🔒 كلمة مرور الأدمن</label>
-      <input id="admin_password" name="admin_password" type="password" placeholder="مطلوبة للعمليات"
-             class="input-field" />
+      <input
+        id="admin_password"
+        name="admin_password"
+        type="password"
+        placeholder="مطلوبة للعمليات"
+        class="input-field"
+      />
       <p class="text-xs text-amber-400 mt-1">مطلوبة للإضافة والتعديل والحذف</p>
     </div>
     {% else %}
     <input type="hidden" id="admin_password" value="" />
     {% endif %}
 
-    <form hx-post="/ui/tenants" hx-target="#tenant-rows" hx-swap="innerHTML" hx-include="#admin_password" class="space-y-4">
+    <form
+      hx-post="/ui/tenants"
+      hx-target="#tenant-rows"
+      hx-swap="innerHTML"
+      hx-include="#admin_password"
+      class="space-y-4"
+    >
       <div>
         <label class="label">اسم المشروع *</label>
-        <input name="name" required placeholder="مثال: متجر الإلكترونيات" class="input-field" />
+        <input
+          name="name"
+          required
+          placeholder="مثال: متجر الإلكترونيات"
+          class="input-field"
+        />
       </div>
 
       <div>
         <label class="label">System Prompt (اختياري)</label>
-        <textarea name="system_prompt" rows="3" placeholder="أنت مساعد ذكي تساعد العملاء في..." class="input-field"></textarea>
+        <textarea
+          name="system_prompt"
+          rows="3"
+          placeholder="أنت مساعد ذكي تساعد العملاء في..."
+          class="input-field"
+        ></textarea>
         <p class="text-xs text-slate-500 mt-1">يحدد شخصية البوت وطريقة تحدثه</p>
       </div>
 
       <div>
         <label class="label">Webhook URL (اختياري)</label>
-        <input name="webhook_url" type="url" placeholder="https://your-server.com/webhook" class="input-field" />
+        <input
+          name="webhook_url"
+          type="url"
+          placeholder="https://your-server.com/webhook"
+          class="input-field"
+        />
       </div>
 
-      <button type="submit" class="btn-primary w-full">
-        ➕ إنشاء المشروع
-      </button>
+      <button type="submit" class="btn-primary w-full">➕ إنشاء المشروع</button>
     </form>
 
     <div class="mt-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700">

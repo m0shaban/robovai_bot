@@ -1,214 +1,355 @@
 {% if tenant %}
 <div class="grid lg:grid-cols-2 gap-6">
-    <!-- AI & Bot Settings -->
-    <div class="space-y-6">
-        <!-- AI Status Card -->
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-slate-50">🤖 حالة الذكاء الاصطناعي</h3>
-                {% if ai_configured %}
-                <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    متصل
-                </span>
-                {% else %}
-                <span class="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                    غير مُعد
-                </span>
-                {% endif %}
-            </div>
-            
-            <div class="space-y-3 text-sm">
-                <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span class="text-slate-400">المزود</span>
-                    <span class="text-cyan-400 font-medium">{{ ai_provider }}</span>
-                </div>
-                <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span class="text-slate-400">النموذج</span>
-                    <span class="text-indigo-400 font-medium">{{ ai_model }}</span>
-                </div>
+  <!-- AI & Bot Settings -->
+  <div class="space-y-6">
+    <!-- AI Status Card -->
+    <div class="glass-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-50">
+          🤖 حالة الذكاء الاصطناعي
+        </h3>
+        {% if ai_configured %}
+        <span
+          class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm flex items-center gap-1"
+        >
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          متصل
+        </span>
+        {% else %}
+        <span
+          class="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm flex items-center gap-1"
+        >
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+          غير مُعد
+        </span>
+        {% endif %}
+      </div>
 
-                {% if ai_models and ai_models|length > 0 %}
-                <div class="p-3 bg-slate-800/50 rounded-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-slate-400">النماذج المتاحة</span>
-                        <span class="text-xs text-slate-500">({{ ai_models|length }})</span>
-                    </div>
-                    <div class="max-h-40 overflow-auto space-y-2">
-                        {% for m in ai_models[:20] %}
-                        <div class="flex items-center justify-between gap-2">
-                            <code class="text-xs text-slate-200 break-all">{{ m }}</code>
-                            <button onclick="copyToClipboard('{{ m }}', this)" 
-                                class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0">
-                                📋
-                            </button>
-                        </div>
-                        {% endfor %}
-                        {% if ai_models|length > 20 %}
-                        <p class="text-xs text-slate-500 mt-2">... والمزيد</p>
-                        {% endif %}
-                    </div>
-                    <p class="text-xs text-slate-500 mt-3">لتغيير النموذج: عدّل متغير البيئة <code class="bg-slate-900 px-1 rounded">LLM_MODEL</code> (أو <code class="bg-slate-900 px-1 rounded">GROQ_MODEL</code>) في Render.</p>
-                </div>
-                {% endif %}
-                {% if not ai_configured %}
-                <div class="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-xl">
-                    <p class="text-yellow-300 text-sm mb-2">⚠️ الذكاء الاصطناعي غير مُعد!</p>
-                    <p class="text-yellow-400/80 text-xs">يجب إضافة <code class="bg-slate-800 px-1 rounded">GROQ_API_KEY</code> أو <code class="bg-slate-800 px-1 rounded">LLM_API_KEY</code> في متغيرات البيئة على Render</p>
-                </div>
-                {% endif %}
-            </div>
+      <div class="space-y-3 text-sm">
+        <div
+          class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg"
+        >
+          <span class="text-slate-400">المزود</span>
+          <span class="text-cyan-400 font-medium">{{ ai_provider }}</span>
+        </div>
+        <div
+          class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg"
+        >
+          <span class="text-slate-400">النموذج</span>
+          <span class="text-indigo-400 font-medium">{{ ai_model }}</span>
         </div>
 
-        <!-- System Prompt -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-semibold text-slate-50 mb-4">🧠 شخصية البوت (System Prompt)</h3>
-            <form id="promptForm" onsubmit="saveSettings(event)">
-                <input type="hidden" name="tenant_api_key" value="{{ tenant.api_key }}" />
-                <textarea name="system_prompt" rows="6" class="input-field mb-4" placeholder="أنت مساعد ذكي ودود تساعد العملاء...">{{ tenant.system_prompt or '' }}</textarea>
-                <p class="text-xs text-slate-500 mb-4">يحدد كيف يتصرف البوت ويجيب على الأسئلة</p>
-                
-                <!-- Quick Prompts -->
-                <div class="mb-4">
-                    <p class="text-xs text-slate-400 mb-2">قوالب جاهزة:</p>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="setPrompt('customer_service')" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
-                            🛒 خدمة عملاء
-                        </button>
-                        <button type="button" onclick="setPrompt('sales')" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
-                            💼 مبيعات
-                        </button>
-                        <button type="button" onclick="setPrompt('support')" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
-                            🔧 دعم فني
-                        </button>
-                        <button type="button" onclick="setPrompt('friendly')" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
-                            😊 ودود
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-primary w-full">💾 حفظ الإعدادات</button>
-            </form>
+        {% if ai_models and ai_models|length > 0 %}
+        <div class="p-3 bg-slate-800/50 rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-400">النماذج المتاحة</span>
+            <span class="text-xs text-slate-500">({{ ai_models|length }})</span>
+          </div>
+          <div class="max-h-40 overflow-auto space-y-2">
+            {% for m in ai_models[:20] %}
+            <div class="flex items-center justify-between gap-2">
+              <code class="text-xs text-slate-200 break-all">{{ m }}</code>
+              <button
+                onclick="copyToClipboard('{{ m }}', this)"
+                class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0"
+              >
+                📋
+              </button>
+            </div>
+            {% endfor %} {% if ai_models|length > 20 %}
+            <p class="text-xs text-slate-500 mt-2">... والمزيد</p>
+            {% endif %}
+          </div>
+          <p class="text-xs text-slate-500 mt-3">
+            لتغيير النموذج: عدّل متغير البيئة
+            <code class="bg-slate-900 px-1 rounded">LLM_MODEL</code> (أو
+            <code class="bg-slate-900 px-1 rounded">GROQ_MODEL</code>) في
+            Render.
+          </p>
         </div>
+        {% endif %} {% if not ai_configured %}
+        <div
+          class="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-xl"
+        >
+          <p class="text-yellow-300 text-sm mb-2">
+            ⚠️ الذكاء الاصطناعي غير مُعد!
+          </p>
+          <p class="text-yellow-400/80 text-xs">
+            يجب إضافة
+            <code class="bg-slate-800 px-1 rounded">GROQ_API_KEY</code> أو
+            <code class="bg-slate-800 px-1 rounded">LLM_API_KEY</code> في
+            متغيرات البيئة على Render
+          </p>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
-    <!-- Webhooks & API -->
-    <div class="space-y-6">
-        <!-- Webhook URLs -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-semibold text-slate-50 mb-4">🔗 روابط Webhook</h3>
-            <p class="text-sm text-slate-400 mb-4">استخدم هذه الروابط لربط قنوات التواصل</p>
+    <!-- System Prompt -->
+    <div class="glass-card p-6">
+      <h3 class="text-lg font-semibold text-slate-50 mb-4">
+        🧠 شخصية البوت (System Prompt)
+      </h3>
+      <form id="promptForm" onsubmit="saveSettings(event)">
+        <input
+          type="hidden"
+          name="tenant_api_key"
+          value="{{ tenant.api_key }}"
+        />
+        <textarea
+          name="system_prompt"
+          rows="6"
+          class="input-field mb-4"
+          placeholder="أنت مساعد ذكي ودود تساعد العملاء..."
+        >
+{{ tenant.system_prompt or '' }}</textarea
+        >
+        <p class="text-xs text-slate-500 mb-4">
+          يحدد كيف يتصرف البوت ويجيب على الأسئلة
+        </p>
 
-            {% set _integrations = integrations|default([]) %}
-            {% set telegram_integ = (_integrations|selectattr('channel_type','equalto','telegram')|list|first) %}
-            {% set meta_integrations = _integrations|selectattr('channel_type','in',['whatsapp','messenger','instagram'])|list %}
-            
-            <div class="space-y-4">
-                <!-- Telegram Webhook -->
-                <div>
-                    <label class="text-xs text-slate-400 block mb-1">📱 Telegram Webhook</label>
-                    <div class="flex gap-2">
-                        <input type="text" readonly value="{% if telegram_integ %}{{ base_url }}/webhooks/telegram/{{ telegram_integ.verify_token }}{% else %}(أنشئ تكامل Telegram أولاً من صفحة القنوات){% endif %}" 
-                            class="input-field text-xs flex-1 bg-slate-900" id="telegram-webhook" />
-                        <button onclick="copyToClipboard(document.getElementById('telegram-webhook').value, this)" 
-                            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm">
-                            📋 نسخ
-                        </button>
-                    </div>
-                    {% if telegram_integ %}
-                    <p class="text-xs text-slate-500 mt-2">ضع هذا الرابط في Telegram عبر <code class="bg-slate-900 px-1 rounded">setWebhook</code>. يجب أن يكون الـ <code class="bg-slate-900 px-1 rounded">verify_token</code> مطابقاً للتكامل.</p>
-                    {% endif %}
-                </div>
-
-                <!-- Meta Webhook -->
-                <div>
-                    <label class="text-xs text-slate-400 block mb-1">💬 Meta (WhatsApp/Messenger/Instagram)</label>
-                    <div class="flex gap-2">
-                        <input type="text" readonly value="{{ base_url }}/webhooks/meta" 
-                            class="input-field text-xs flex-1 bg-slate-900" id="meta-webhook" />
-                        <button onclick="copyToClipboard(document.getElementById('meta-webhook').value, this)" 
-                            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm">
-                            📋 نسخ
-                        </button>
-                    </div>
-
-                    {% if meta_integrations and meta_integrations|length > 0 %}
-                    <div class="mt-3 p-3 bg-slate-800/50 rounded-lg">
-                        <p class="text-xs text-slate-400 mb-2">Verify Token (ضعه في لوحة Meta عند تفعيل Webhook):</p>
-                        <div class="space-y-2">
-                            {% for integ in meta_integrations %}
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs text-slate-400">{{ integ.channel_type }}</span>
-                                <div class="flex items-center gap-2">
-                                    <code class="text-xs text-slate-200 break-all" id="vt-{{ integ.id }}">{{ integ.verify_token }}</code>
-                                    <button onclick="copyToClipboard(document.getElementById('vt-{{ integ.id }}').textContent, this)"
-                                        class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0">📋</button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-xs text-slate-500 mt-2">أنشئ تكامل WhatsApp/Messenger/Instagram أولاً ليظهر Verify Token هنا.</p>
-                    {% endif %}
-                </div>
-            </div>
+        <!-- Quick Prompts -->
+        <div class="mb-4">
+          <p class="text-xs text-slate-400 mb-2">قوالب جاهزة:</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onclick="setPrompt('customer_service')"
+              class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              🛒 خدمة عملاء
+            </button>
+            <button
+              type="button"
+              onclick="setPrompt('sales')"
+              class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              💼 مبيعات
+            </button>
+            <button
+              type="button"
+              onclick="setPrompt('support')"
+              class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              🔧 دعم فني
+            </button>
+            <button
+              type="button"
+              onclick="setPrompt('friendly')"
+              class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              😊 ودود
+            </button>
+          </div>
         </div>
 
-        <!-- API Key -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-semibold text-slate-50 mb-4">🔑 API Key</h3>
-            <div class="p-4 bg-slate-800/50 rounded-xl mb-4">
-                <div class="flex items-center justify-between gap-2">
-                    <code class="text-cyan-400 text-sm break-all" id="api-key-display">{{ tenant.api_key }}</code>
-                    <button onclick="copyToClipboard('{{ tenant.api_key }}', this)" 
-                        class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors text-xs flex-shrink-0">
-                        📋
-                    </button>
-                </div>
-            </div>
-            <p class="text-xs text-slate-500">استخدم هذا المفتاح للوصول إلى API الخاص بمشروعك</p>
-        </div>
-
-        <!-- External Webhook -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-semibold text-slate-50 mb-4">📤 Webhook خارجي (اختياري)</h3>
-            <form id="webhookForm" onsubmit="saveWebhook(event)">
-                <input type="hidden" name="tenant_api_key" value="{{ tenant.api_key }}" />
-                <input type="url" name="webhook_url" value="{{ tenant.webhook_url or '' }}" 
-                    placeholder="https://your-server.com/webhook" class="input-field mb-2" />
-                <p class="text-xs text-slate-500 mb-4">سيتم إرسال نسخة من كل رسالة لهذا العنوان</p>
-                <button type="submit" class="btn-secondary w-full">💾 حفظ</button>
-            </form>
-        </div>
+        <button type="submit" class="btn-primary w-full">
+          💾 حفظ الإعدادات
+        </button>
+      </form>
     </div>
+  </div>
+
+  <!-- Webhooks & API -->
+  <div class="space-y-6">
+    <!-- Webhook URLs -->
+    <div class="glass-card p-6">
+      <h3 class="text-lg font-semibold text-slate-50 mb-4">🔗 روابط Webhook</h3>
+      <p class="text-sm text-slate-400 mb-4">
+        استخدم هذه الروابط لربط قنوات التواصل
+      </p>
+
+      {% set _integrations = integrations|default([]) %} {% set telegram_integ =
+      (_integrations|selectattr('channel_type','equalto','telegram')|list|first)
+      %} {% set meta_integrations =
+      _integrations|selectattr('channel_type','in',['whatsapp','messenger','instagram'])|list
+      %}
+
+      <div class="space-y-4">
+        <!-- Telegram Webhook -->
+        <div>
+          <label class="text-xs text-slate-400 block mb-1"
+            >📱 Telegram Webhook</label
+          >
+          <div class="flex gap-2">
+            <input
+              type="text"
+              readonly
+              value="{% if telegram_integ %}{{ base_url }}/webhooks/telegram/{{ telegram_integ.verify_token }}{% else %}(أنشئ تكامل Telegram أولاً من صفحة القنوات){% endif %}"
+              class="input-field text-xs flex-1 bg-slate-900"
+              id="telegram-webhook"
+            />
+            <button
+              onclick="copyToClipboard(document.getElementById('telegram-webhook').value, this)"
+              class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm"
+            >
+              📋 نسخ
+            </button>
+          </div>
+          {% if telegram_integ %}
+          <p class="text-xs text-slate-500 mt-2">
+            ضع هذا الرابط في Telegram عبر
+            <code class="bg-slate-900 px-1 rounded">setWebhook</code>. يجب أن
+            يكون الـ
+            <code class="bg-slate-900 px-1 rounded">verify_token</code> مطابقاً
+            للتكامل.
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Meta Webhook -->
+        <div>
+          <label class="text-xs text-slate-400 block mb-1"
+            >💬 Meta (WhatsApp/Messenger/Instagram)</label
+          >
+          <div class="flex gap-2">
+            <input
+              type="text"
+              readonly
+              value="{{ base_url }}/webhooks/meta"
+              class="input-field text-xs flex-1 bg-slate-900"
+              id="meta-webhook"
+            />
+            <button
+              onclick="copyToClipboard(document.getElementById('meta-webhook').value, this)"
+              class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm"
+            >
+              📋 نسخ
+            </button>
+          </div>
+
+          {% if meta_integrations and meta_integrations|length > 0 %}
+          <div class="mt-3 p-3 bg-slate-800/50 rounded-lg">
+            <p class="text-xs text-slate-400 mb-2">
+              Verify Token (ضعه في لوحة Meta عند تفعيل Webhook):
+            </p>
+            <div class="space-y-2">
+              {% for integ in meta_integrations %}
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-400"
+                  >{{ integ.channel_type }}</span
+                >
+                <div class="flex items-center gap-2">
+                  <code
+                    class="text-xs text-slate-200 break-all"
+                    id="vt-{{ integ.id }}"
+                    >{{ integ.verify_token }}</code
+                  >
+                  <button
+                    onclick="copyToClipboard(document.getElementById('vt-{{ integ.id }}').textContent, this)"
+                    class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-xs flex-shrink-0"
+                  >
+                    📋
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+          <p class="text-xs text-slate-500 mt-2">
+            أنشئ تكامل WhatsApp/Messenger/Instagram أولاً ليظهر Verify Token
+            هنا.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- API Key -->
+    <div class="glass-card p-6">
+      <h3 class="text-lg font-semibold text-slate-50 mb-4">🔑 API Key</h3>
+      <div class="p-4 bg-slate-800/50 rounded-xl mb-4">
+        <div class="flex items-center justify-between gap-2">
+          <code class="text-cyan-400 text-sm break-all" id="api-key-display"
+            >{{ tenant.api_key }}</code
+          >
+          <button
+            onclick="copyToClipboard('{{ tenant.api_key }}', this)"
+            class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors text-xs flex-shrink-0"
+          >
+            📋
+          </button>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500">
+        استخدم هذا المفتاح للوصول إلى API الخاص بمشروعك
+      </p>
+    </div>
+
+    <!-- External Webhook -->
+    <div class="glass-card p-6">
+      <h3 class="text-lg font-semibold text-slate-50 mb-4">
+        📤 Webhook خارجي (اختياري)
+      </h3>
+      <form id="webhookForm" onsubmit="saveWebhook(event)">
+        <input
+          type="hidden"
+          name="tenant_api_key"
+          value="{{ tenant.api_key }}"
+        />
+        <input
+          type="url"
+          name="webhook_url"
+          value="{{ tenant.webhook_url or '' }}"
+          placeholder="https://your-server.com/webhook"
+          class="input-field mb-2"
+        />
+        <p class="text-xs text-slate-500 mb-4">
+          سيتم إرسال نسخة من كل رسالة لهذا العنوان
+        </p>
+        <button type="submit" class="btn-secondary w-full">💾 حفظ</button>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Quick Setup Guide -->
 <div class="glass-card p-6 mt-6">
-    <h3 class="text-lg font-semibold text-slate-50 mb-4">📚 دليل الإعداد السريع</h3>
-    <div class="grid md:grid-cols-3 gap-4">
-        <div class="p-4 bg-slate-800/50 rounded-xl">
-            <div class="text-2xl mb-2">1️⃣</div>
-            <h4 class="font-medium text-slate-200 mb-1">احصل على API Key</h4>
-            <p class="text-xs text-slate-400">سجل في <a href="https://console.groq.com" target="_blank" class="text-cyan-400 hover:underline">Groq</a> أو <a href="https://build.nvidia.com" target="_blank" class="text-cyan-400 hover:underline">NVIDIA</a></p>
-        </div>
-        <div class="p-4 bg-slate-800/50 rounded-xl">
-            <div class="text-2xl mb-2">2️⃣</div>
-            <h4 class="font-medium text-slate-200 mb-1">أضف المفتاح</h4>
-            <p class="text-xs text-slate-400">في Render: Environment → Add <code class="bg-slate-900 px-1 rounded">GROQ_API_KEY</code></p>
-        </div>
-        <div class="p-4 bg-slate-800/50 rounded-xl">
-            <div class="text-2xl mb-2">3️⃣</div>
-            <h4 class="font-medium text-slate-200 mb-1">اربط القنوات</h4>
-            <p class="text-xs text-slate-400">انسخ Webhook URL وأضفه في Telegram/Meta</p>
-        </div>
+  <h3 class="text-lg font-semibold text-slate-50 mb-4">
+    📚 دليل الإعداد السريع
+  </h3>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="p-4 bg-slate-800/50 rounded-xl">
+      <div class="text-2xl mb-2">1️⃣</div>
+      <h4 class="font-medium text-slate-200 mb-1">احصل على API Key</h4>
+      <p class="text-xs text-slate-400">
+        سجل في
+        <a
+          href="https://console.groq.com"
+          target="_blank"
+          class="text-cyan-400 hover:underline"
+          >Groq</a
+        >
+        أو
+        <a
+          href="https://build.nvidia.com"
+          target="_blank"
+          class="text-cyan-400 hover:underline"
+          >NVIDIA</a
+        >
+      </p>
     </div>
+    <div class="p-4 bg-slate-800/50 rounded-xl">
+      <div class="text-2xl mb-2">2️⃣</div>
+      <h4 class="font-medium text-slate-200 mb-1">أضف المفتاح</h4>
+      <p class="text-xs text-slate-400">
+        في Render: Environment → Add
+        <code class="bg-slate-900 px-1 rounded">GROQ_API_KEY</code>
+      </p>
+    </div>
+    <div class="p-4 bg-slate-800/50 rounded-xl">
+      <div class="text-2xl mb-2">3️⃣</div>
+      <h4 class="font-medium text-slate-200 mb-1">اربط القنوات</h4>
+      <p class="text-xs text-slate-400">
+        انسخ Webhook URL وأضفه في Telegram/Meta
+      </p>
+    </div>
+  </div>
 </div>
 
 <script>
-const prompts = {
+  const prompts = {
     customer_service: `أنت مساعد خدمة عملاء محترف وودود. 
 - أجب بشكل مختصر ومفيد
 - كن صبوراً ومتفهماً
@@ -231,57 +372,58 @@ const prompts = {
 - استخدم الإيموجي بشكل معتدل
 - كن مرحاً لكن محترفاً
 - أجب بشكل قصير ومباشر
-- اسأل عن حال العميل`
-};
+- اسأل عن حال العميل`,
+  };
 
-function setPrompt(type) {
-    document.querySelector('textarea[name="system_prompt"]').value = prompts[type];
-}
+  function setPrompt(type) {
+    document.querySelector('textarea[name="system_prompt"]').value =
+      prompts[type];
+  }
 
-async function saveSettings(e) {
+  async function saveSettings(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-    
-    try {
-        const response = await fetch('/ui/settings/update', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showToast('✅ تم حفظ الإعدادات بنجاح');
-        } else {
-            showToast('❌ حدث خطأ', 'error');
-        }
-    } catch (error) {
-        showToast('❌ حدث خطأ في الاتصال', 'error');
-    }
-}
 
-async function saveWebhook(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    
     try {
-        const response = await fetch('/ui/settings/update', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showToast('✅ تم حفظ Webhook');
-        }
-    } catch (error) {
+      const response = await fetch('/ui/settings/update', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        showToast('✅ تم حفظ الإعدادات بنجاح');
+      } else {
         showToast('❌ حدث خطأ', 'error');
+      }
+    } catch (error) {
+      showToast('❌ حدث خطأ في الاتصال', 'error');
     }
-}
+  }
+
+  async function saveWebhook(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/ui/settings/update', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        showToast('✅ تم حفظ Webhook');
+      }
+    } catch (error) {
+      showToast('❌ حدث خطأ', 'error');
+    }
+  }
 </script>
 
 {% else %}
 <div class="text-center py-12 text-slate-400">
-    <div class="text-5xl mb-4">⚙️</div>
-    <p>اختر مشروعاً لعرض الإعدادات</p>
+  <div class="text-5xl mb-4">⚙️</div>
+  <p>اختر مشروعاً لعرض الإعدادات</p>
 </div>
 {% endif %}

@@ -1,38 +1,41 @@
-{% extends "base.html" %}
-{% block title %}سجل المحادثات - RoboVAI{% endblock %}
+{% extends "base.html" %} {% block title %}سجل المحادثات - RoboVAI{% endblock %}
 {% block content %}
 <div class="glass-card p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-50">💬 سجل المحادثات</h1>
-            <p class="text-slate-400 text-sm mt-1">جميع المحادثات مع العملاء</p>
-        </div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-50">💬 سجل المحادثات</h1>
+      <p class="text-slate-400 text-sm mt-1">جميع المحادثات مع العملاء</p>
     </div>
+  </div>
 
-    <div class="mb-6">
-        <label class="label">اختر المشروع</label>
-        <select id="tenant_select" class="select-field" onchange="loadLogs()">
-            <option value="">-- اختر مشروعاً --</option>
-            {% for tenant in tenants %}
-            <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+  <div class="mb-6">
+    <label class="label">اختر المشروع</label>
+    <select id="tenant_select" class="select-field" onchange="loadLogs()">
+      <option value="">-- اختر مشروعاً --</option>
+      {% for tenant in tenants %}
+      <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <div id="chatlog-rows">
-        <div class="text-center py-12 text-slate-400">
-            <div class="text-5xl mb-4">💬</div>
-            <p>اختر مشروعاً لعرض المحادثات</p>
-        </div>
+  <div id="chatlog-rows">
+    <div class="text-center py-12 text-slate-400">
+      <div class="text-5xl mb-4">💬</div>
+      <p>اختر مشروعاً لعرض المحادثات</p>
     </div>
+  </div>
 </div>
 
 <script>
-function loadLogs() {
+  function loadLogs() {
     const apiKey = document.getElementById('tenant_select').value;
     if (apiKey) {
-        htmx.ajax('GET', '/ui/chatlogs/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#chatlog-rows'});
+      htmx.ajax(
+        'GET',
+        '/ui/chatlogs/rows?tenant_api_key=' + encodeURIComponent(apiKey),
+        { target: '#chatlog-rows' }
+      );
     }
-}
+  }
 </script>
 {% endblock %}

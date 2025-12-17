@@ -1,15 +1,21 @@
 {% for msg in messages %}
-<div class="flex {{ 'justify-end' if msg.sender_type.value == 'bot' else 'justify-start' }}">
-    <div class="max-w-[70%] {{ 'bg-cyan-600/20 border-cyan-500/30 rounded-tl-none' if msg.sender_type.value == 'bot' else 'bg-slate-700/50 border-slate-600 rounded-tr-none' }} border p-3 rounded-2xl">
-        <p class="text-sm text-slate-200 whitespace-pre-wrap">{{ msg.message }}</p>
-        <span class="text-[10px] text-slate-500 block mt-1 {{ 'text-left' if msg.sender_type.value == 'bot' else 'text-right' }}">
-            {{ msg.timestamp.strftime('%H:%M') }}
-        </span>
-    </div>
+<div
+  class="flex {{ 'justify-end' if msg.sender_type.value == 'bot' else 'justify-start' }}"
+>
+  <div
+    class="max-w-[70%] {{ 'bg-cyan-600/20 border-cyan-500/30 rounded-tl-none' if msg.sender_type.value == 'bot' else 'bg-slate-700/50 border-slate-600 rounded-tr-none' }} border p-3 rounded-2xl"
+  >
+    <p class="text-sm text-slate-200 whitespace-pre-wrap">{{ msg.message }}</p>
+    <span
+      class="text-[10px] text-slate-500 block mt-1 {{ 'text-left' if msg.sender_type.value == 'bot' else 'text-right' }}"
+    >
+      {{ msg.timestamp.strftime('%H:%M') }}
+    </span>
+  </div>
 </div>
 {% endfor %}
 <script>
-    // Auto scroll to bottom
-    var container = document.getElementById('chat-messages');
-    container.scrollTop = container.scrollHeight;
+  // Auto scroll to bottom
+  var container = document.getElementById('chat-messages');
+  container.scrollTop = container.scrollHeight;
 </script>

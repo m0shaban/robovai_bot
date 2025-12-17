@@ -26,22 +26,24 @@ async def generate_chat_response(
         if not lead:
             # Create a basic lead so we can track flow state immediately
             lead = await create_lead(
-                session=session, 
-                tenant_id=tenant_id, 
-                phone_number=sender_id, 
-                customer_name=None, 
-                summary=None
+                session=session,
+                tenant_id=tenant_id,
+                phone_number=sender_id,
+                customer_name=None,
+                summary=None,
             )
 
     manager = ChatManager(session=session)
-    result = await manager.process_message(tenant_id=tenant_id, user_message=message, lead=lead)
+    result = await manager.process_message(
+        tenant_id=tenant_id, user_message=message, lead=lead
+    )
 
     if background_tasks is not None:
         background_tasks.add_task(
-            detect_and_save_lead, 
-            tenant_id=tenant_id, 
+            detect_and_save_lead,
+            tenant_id=tenant_id,
             user_message=message,
-            sender_id=sender_id
+            sender_id=sender_id,
         )
 
     return result.response, result.source

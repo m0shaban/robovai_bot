@@ -45,20 +45,20 @@ async def _create_default_super_admin():
     import os
     from app.db.session import async_session_maker
     from app.crud.user import count_super_admins, create_super_admin, get_user_by_email
-    
+
     # Get credentials from environment variables
     admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@robovai.com")
     admin_password = os.getenv("SUPER_ADMIN_PASSWORD", "")
     admin_name = os.getenv("SUPER_ADMIN_NAME", "Super Admin")
-    
+
     if not admin_password:
         # Use ADMIN_PASSWORD as fallback for backwards compatibility
         admin_password = os.getenv("ADMIN_PASSWORD", "")
-    
+
     if not admin_password:
         print("⚠️  No SUPER_ADMIN_PASSWORD set, skipping auto-creation of super admin")
         return
-    
+
     try:
         async with async_session_maker() as session:
             # Check if super admin already exists
@@ -66,13 +66,13 @@ async def _create_default_super_admin():
             if existing_count > 0:
                 print(f"✓ Super admin already exists ({existing_count} found)")
                 return
-            
+
             # Check if email is already used
             existing_user = await get_user_by_email(session, admin_email)
             if existing_user:
                 print(f"✓ User with email {admin_email} already exists")
                 return
-            
+
             # Create super admin
             user = await create_super_admin(
                 session,
@@ -93,9 +93,12 @@ app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 # Root redirect to UI Landing Page
 from fastapi.responses import RedirectResponse
+
+
 @app.get("/", include_in_schema=False)
 async def root():
     return RedirectResponse(url="/ui/welcome")
+
 
 origins = _parse_cors_origins(settings.cors_allow_origins)
 

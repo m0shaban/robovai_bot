@@ -10,15 +10,15 @@ from app.models.base import Base
 
 
 class TemplateCategory(str, enum.Enum):
-    welcome = "welcome"           # ترحيب
-    farewell = "farewell"         # وداع
-    complaint = "complaint"       # شكاوى
-    inquiry = "inquiry"           # استفسار
-    promotion = "promotion"       # عروض
-    support = "support"           # دعم فني
-    payment = "payment"           # دفع
-    shipping = "shipping"         # شحن
-    general = "general"           # عام
+    welcome = "welcome"  # ترحيب
+    farewell = "farewell"  # وداع
+    complaint = "complaint"  # شكاوى
+    inquiry = "inquiry"  # استفسار
+    promotion = "promotion"  # عروض
+    support = "support"  # دعم فني
+    payment = "payment"  # دفع
+    shipping = "shipping"  # شحن
+    general = "general"  # عام
 
 
 class MessageTemplate(Base):
@@ -34,7 +34,7 @@ class MessageTemplate(Base):
     )
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    
+
     category: Mapped[TemplateCategory] = mapped_column(
         Enum(TemplateCategory, name="template_category"),
         nullable=False,
@@ -42,7 +42,7 @@ class MessageTemplate(Base):
     )
 
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Optional: variables that can be replaced like {customer_name}
     variables: Mapped[str | None] = mapped_column(Text, nullable=True)
 

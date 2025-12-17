@@ -1,31 +1,51 @@
 {% if items %}
 <div class="space-y-4">
-    {% for item in items %}
-    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition group">
-        <div class="flex items-start justify-between mb-2">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
-                    📄
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-200">{{ item.title }}</h3>
-                    <span class="text-xs text-slate-500">{{ item.created_at.strftime('%Y-%m-%d') }}</span>
-                </div>
-            </div>
-            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button hx-post="/ui/kb/delete" hx-vals='{"item_id": "{{ item.id }}", "tenant_id": "{{ item.tenant_id }}"}' hx-target="#kb-rows" hx-confirm="هل أنت متأكد من الحذف؟" class="btn-danger">
-                    🗑️
-                </button>
-            </div>
+  {% for item in items %}
+  <div
+    class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition group"
+  >
+    <div class="flex items-start justify-between mb-2">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl"
+        >
+          📄
         </div>
-        <div class="text-sm text-slate-400 bg-slate-900/50 p-3 rounded-lg whitespace-pre-wrap max-h-32 overflow-y-auto">{{ item.content }}</div>
+        <div>
+          <h3 class="font-bold text-slate-200">{{ item.title }}</h3>
+          <span class="text-xs text-slate-500"
+            >{{ item.created_at.strftime('%Y-%m-%d') }}</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <button
+          hx-post="/ui/kb/delete"
+          hx-vals='{"item_id": "{{ item.id }}", "tenant_id": "{{ item.tenant_id }}"}'
+          hx-target="#kb-rows"
+          hx-confirm="هل أنت متأكد من الحذف؟"
+          class="btn-danger"
+        >
+          🗑️
+        </button>
+      </div>
     </div>
-    {% endfor %}
+    <div
+      class="text-sm text-slate-400 bg-slate-900/50 p-3 rounded-lg whitespace-pre-wrap max-h-32 overflow-y-auto"
+    >
+      {{ item.content }}
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% else %}
 <div class="text-center py-12 text-slate-400">
-    <div class="text-5xl mb-4">📄</div>
-    <p>لا يوجد محتوى مضاف بعد</p>
-    <p class="text-sm mt-1">أضف معلومات عن منتجاتك أو خدماتك ليتمكن البوت من استخدامها</p>
+  <div class="text-5xl mb-4">📄</div>
+  <p>لا يوجد محتوى مضاف بعد</p>
+  <p class="text-sm mt-1">
+    أضف معلومات عن منتجاتك أو خدماتك ليتمكن البوت من استخدامها
+  </p>
 </div>
 {% endif %}

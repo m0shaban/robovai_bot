@@ -22,7 +22,7 @@ class KnowledgeBase(Base):
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     created_at: Mapped[dt.datetime] = mapped_column(
@@ -30,7 +30,7 @@ class KnowledgeBase(Base):
         nullable=False,
         server_default=func.now(),
     )
-    
+
     updated_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

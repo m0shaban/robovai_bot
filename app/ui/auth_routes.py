@@ -410,50 +410,58 @@ async def resend_verification(
     """Resend verification email (JSON response for AJAX)."""
     from fastapi.responses import JSONResponse
     from app.crud.user import generate_verification_token
-    
+
     try:
         user = await get_user_by_email(session, email)
-        
+
         if not user:
             return JSONResponse(
                 content={"success": False, "message": "البريد الإلكتروني غير مسجل"},
-                status_code=400
+                status_code=400,
             )
-        
+
         if user.is_verified:
             return JSONResponse(
-                content={"success": False, "message": "الحساب مفعل بالفعل. يمكنك تسجيل الدخول."},
-                status_code=400
+                content={
+                    "success": False,
+                    "message": "الحساب مفعل بالفعل. يمكنك تسجيل الدخول.",
+                },
+                status_code=400,
             )
-        
+
         # Generate new token
         token = await generate_verification_token(session, user)
         verification_url = f"{request.base_url}ui/auth/verify-email?token={token}"
-        
+
         # Send email
         sent = await email_service.send_verification_email(
             to_email=user.email,
             verification_url=verification_url,
             user_name=user.full_name,
         )
-        
+
         if sent:
             print(f"✅ Verification email resent to {email}")
             return JSONResponse(
-                content={"success": True, "message": "تم إرسال رابط التفعيل إلى بريدك الإلكتروني"},
-                status_code=200
+                content={
+                    "success": True,
+                    "message": "تم إرسال رابط التفعيل إلى بريدك الإلكتروني",
+                },
+                status_code=200,
             )
         else:
             print(f"⚠️  Email service returned False for {email}")
             print(f"[DEV] Verification link: {verification_url}")
             return JSONResponse(
-                content={"success": False, "message": "فشل في إرسال البريد الإلكتروني. حاول مرة أخرى."},
-                status_code=500
+                content={
+                    "success": False,
+                    "message": "فشل في إرسال البريد الإلكتروني. حاول مرة أخرى.",
+                },
+                status_code=500,
             )
-            
+
     except Exception as e:
         print(f"❌ Resend verification error: {e}")
         return JSONResponse(
-            content={"success": False, "message": "حدث خطأ غير متوقع"},
-            status_code=500
+            content={"success": False, "message": "حدث خطأ غير متوقع"}, status_code=500
         )

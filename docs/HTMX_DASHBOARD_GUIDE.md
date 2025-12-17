@@ -1,9 +1,11 @@
 # RoboVAI HTMX Dashboard - User Guide
 
 ## Overview
+
 The new admin dashboard is built with FastAPI + HTMX + Tailwind CSS, providing a modern, responsive interface without requiring separate frontend build tools.
 
 ## Accessing the Dashboard
+
 - **Local**: `http://localhost:8000/ui`
 - **Production**: `https://<your-backend>.onrender.com/ui`
 
@@ -12,7 +14,9 @@ The dashboard automatically redirects to `/ui/tenants`.
 ## Pages & Features
 
 ### 1. 👥 Tenants
+
 **Admin-only** (requires `ADMIN_PASSWORD` if set)
+
 - View all tenants with their API keys, system prompts, and webhook URLs
 - Create new tenants with optional system prompt and webhook
 - Rotate API keys
@@ -21,7 +25,9 @@ The dashboard automatically redirects to `/ui/tenants`.
 - **Security**: API keys are displayed for easy integration, but ensure `ADMIN_PASSWORD` is set in production
 
 ### 2. 📱 Channels
+
 Manage channel integrations (Telegram, Meta/WhatsApp, etc.)
+
 - **Authentication**: Enter tenant API key to load channels
 - View all channel integrations with verify tokens
 - Add new channels with:
@@ -33,7 +39,9 @@ Manage channel integrations (Telegram, Meta/WhatsApp, etc.)
 - **Use case**: Each channel integration receives webhooks from the respective platform
 
 ### 3. ⚡ Quick Replies
+
 Create predefined quick reply buttons for chat interfaces
+
 - **Authentication**: Tenant API key required
 - Add quick replies with:
   - Title (button text shown to user)
@@ -44,7 +52,9 @@ Create predefined quick reply buttons for chat interfaces
 - **Use case**: Common responses like "Talk to agent", "Business hours", etc.
 
 ### 4. 📋 Rules (Scripted Responses)
+
 Define keyword-triggered automated responses
+
 - **Authentication**: Tenant API key required
 - Create rules with:
   - Trigger keyword (e.g., "pricing", "hours")
@@ -54,7 +64,9 @@ Define keyword-triggered automated responses
 - **Use case**: Instant answers to common questions before AI engagement
 
 ### 5. 👤 Leads
+
 View customer leads collected through conversations
+
 - **Authentication**: Tenant API key required
 - Display lead information:
   - Customer name
@@ -64,7 +76,9 @@ View customer leads collected through conversations
 - **Read-only**: Leads are created automatically by the chat service
 
 ### 6. 💬 Chat Logs
+
 Browse conversation history
+
 - **Authentication**: Tenant API key required
 - View recent chat messages with:
   - Lead ID (links to customer)
@@ -75,7 +89,9 @@ Browse conversation history
 - **Limit**: Shows last 200 messages per tenant
 
 ### 7. ⚙️ Settings
+
 Configure tenant-level settings
+
 - **Authentication**: Tenant API key required
 - Edit:
   - **System Prompt**: Instructions for AI assistant behavior
@@ -86,20 +102,24 @@ Configure tenant-level settings
 ## Technical Details
 
 ### Architecture
+
 - **Backend**: FastAPI serves both API and HTML responses
-- **Frontend**: 
+- **Frontend**:
   - Tailwind CSS (CDN) for styling
   - HTMX for partial page updates without page reload
   - Jinja2 templates for server-side rendering
 - **Deployment**: Single service on Render (no separate frontend)
 
 ### Authentication Model
+
 - **Admin operations** (Tenants CRUD): Requires `ADMIN_PASSWORD` environment variable
 - **Tenant operations** (all other pages): Requires tenant API key (obtained from Tenants page)
 - **Security note**: In production, always set `ADMIN_PASSWORD` and use HTTPS
 
 ### HTMX Pattern
+
 Most pages follow this pattern:
+
 1. User enters tenant API key in sidebar/form
 2. JavaScript calls HTMX to load data (`GET /ui/<resource>/rows?tenant_api_key=...`)
 3. Server returns HTML partial (table rows)
@@ -107,12 +127,14 @@ Most pages follow this pattern:
 5. Create/Delete operations similarly swap updated content without full page reload
 
 ### Styling
+
 - **Dark theme**: Slate-900 background with subtle gradients
 - **Responsive**: Works on mobile/tablet/desktop
 - **Components**: Cards, tables, forms, buttons use consistent Tailwind classes
 - **No build step**: Tailwind is loaded via CDN for simplicity
 
 ## Deployment Checklist
+
 - [ ] Set `ADMIN_PASSWORD` environment variable
 - [ ] Set `DATABASE_URL` to Postgres connection string
 - [ ] Set `SECRET_KEY` to strong random value
@@ -124,6 +146,7 @@ Most pages follow this pattern:
 - [ ] Test other pages with tenant API key
 
 ## Future Enhancements
+
 - [ ] Edit rules/quick replies inline
 - [ ] Export leads to CSV
 - [ ] Real-time chat log streaming

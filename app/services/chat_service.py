@@ -67,7 +67,7 @@ class ChatManager:
         base_prompt = (
             tenant.system_prompt if tenant else None
         ) or "You are a helpful assistant."
-        
+
         # Inject Knowledge Base Context
         kb_context = await search_kb_context(self._session, tenant_id, user_message)
         if kb_context:
@@ -174,7 +174,7 @@ class ChatManager:
                 data = resp.json()
 
             return data["choices"][0]["message"]["content"]
-        
+
         except httpx.HTTPStatusError as e:
             logger.error(f"LLM API error: {e.response.status_code} - {e.response.text}")
             if e.response.status_code == 401:
@@ -186,11 +186,11 @@ class ChatManager:
             if e.response.status_code == 400:
                 return "⚠️ فشل طلب الذكاء الاصطناعي (قد يكون اسم النموذج غير صحيح). جرّب تغيير LLM_MODEL في Render."
             return f"⚠️ خطأ من خدمة AI: {e.response.status_code}"
-        
+
         except httpx.TimeoutException:
             logger.error("LLM API timeout")
             return "⚠️ انتهت مهلة الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى."
-        
+
         except Exception as e:
             logger.exception(f"Unexpected LLM error: {e}")
             return "⚠️ حدث خطأ غير متوقع. يرجى المحاولة لاحقاً."

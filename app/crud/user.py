@@ -1,6 +1,7 @@
 """
 User CRUD operations for SaaS authentication.
 """
+
 from __future__ import annotations
 
 import secrets
@@ -16,6 +17,7 @@ from app.models.user import User, UserRole
 
 
 # ==================== Create ====================
+
 
 async def create_user(
     session: AsyncSession,
@@ -68,15 +70,14 @@ async def create_super_admin(
 
 # ==================== Read ====================
 
+
 async def get_user_by_id(
     session: AsyncSession,
     user_id: int,
 ) -> Optional[User]:
     """Get user by ID with tenant loaded."""
     result = await session.execute(
-        select(User)
-        .where(User.id == user_id)
-        .options(selectinload(User.tenant))
+        select(User).where(User.id == user_id).options(selectinload(User.tenant))
     )
     return result.scalar_one_or_none()
 
@@ -100,8 +101,7 @@ async def get_user_by_reset_token(
 ) -> Optional[User]:
     """Get user by password reset token."""
     result = await session.execute(
-        select(User)
-        .where(
+        select(User).where(
             User.reset_token == token,
             User.reset_token_expires > datetime.utcnow(),
         )
@@ -115,8 +115,7 @@ async def get_user_by_verification_token(
 ) -> Optional[User]:
     """Get user by email verification token."""
     result = await session.execute(
-        select(User)
-        .where(
+        select(User).where(
             User.verification_token == token,
             User.verification_token_expires > datetime.utcnow(),
         )
@@ -137,20 +136,20 @@ async def list_users(
     """List users with filters and pagination."""
     query = select(User).options(selectinload(User.tenant))
     count_query = select(func.count(User.id))
-    
+
     # Apply filters
     if tenant_id is not None:
         query = query.where(User.tenant_id == tenant_id)
         count_query = count_query.where(User.tenant_id == tenant_id)
-    
+
     if role is not None:
         query = query.where(User.role == role)
         count_query = count_query.where(User.role == role)
-    
+
     if is_active is not None:
         query = query.where(User.is_active == is_active)
         count_query = count_query.where(User.is_active == is_active)
-    
+
     if search:
         search_term = f"%{search.lower()}%"
         query = query.where(
@@ -165,18 +164,18 @@ async def list_users(
                 User.full_name.ilike(search_term),
             )
         )
-    
+
     # Get total count
     total_result = await session.execute(count_query)
     total = total_result.scalar() or 0
-    
+
     # Apply pagination
     query = query.order_by(User.created_at.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
-    
+
     result = await session.execute(query)
     users = result.scalars().all()
-    
+
     return users, total
 
 
@@ -186,14 +185,13 @@ async def get_users_by_tenant(
 ) -> Sequence[User]:
     """Get all users for a tenant."""
     result = await session.execute(
-        select(User)
-        .where(User.tenant_id == tenant_id)
-        .order_by(User.created_at.desc())
+        select(User).where(User.tenant_id == tenant_id).order_by(User.created_at.desc())
     )
     return result.scalars().all()
 
 
 # ==================== Update ====================
+
 
 async def update_user(
     session: AsyncSession,
@@ -204,7 +202,7 @@ async def update_user(
     for key, value in kwargs.items():
         if hasattr(user, key) and value is not None:
             setattr(user, key, value)
-    
+
     await session.commit()
     await session.refresh(user)
     return user
@@ -249,6 +247,7 @@ async def verify_user_email(
 
 # ==================== Token Generation ====================
 
+
 async def generate_reset_token(
     session: AsyncSession,
     user: User,
@@ -277,6 +276,7 @@ async def generate_verification_token(
 
 # ==================== Delete ====================
 
+
 async def delete_user(
     session: AsyncSession,
     user: User,
@@ -298,6 +298,7 @@ async def deactivate_user(
 
 
 # ==================== Authentication Helpers ====================
+
 
 async def authenticate_user(
     session: AsyncSession,

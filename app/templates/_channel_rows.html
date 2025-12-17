@@ -1,68 +1,97 @@
 {% if error %}
-<div class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm">
-    ⚠️ {{ error }}
+<div
+  class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm"
+>
+  ⚠️ {{ error }}
 </div>
 {% elif channels %}
 <div class="space-y-3">
-    {% for channel in channels %}
-    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl
-                    {% if channel.channel_type == 'telegram' %}bg-blue-500/20 text-blue-400
-                    {% elif channel.channel_type == 'whatsapp' %}bg-green-500/20 text-green-400
-                    {% elif channel.channel_type in ['messenger', 'meta'] %}bg-indigo-500/20 text-indigo-400
-                    {% elif channel.channel_type == 'instagram' %}bg-pink-500/20 text-pink-400
-                    {% else %}bg-slate-600/20 text-slate-400{% endif %}">
-                    {% if channel.channel_type == 'telegram' %}🤖
-                    {% elif channel.channel_type == 'whatsapp' %}💬
-                    {% elif channel.channel_type in ['messenger', 'meta'] %}💙
-                    {% elif channel.channel_type == 'instagram' %}📸
-                    {% else %}📱{% endif %}
-                </div>
-                <div>
-                    <div class="font-semibold text-slate-200">
-                        {% if channel.channel_type in ['messenger', 'meta'] %}Messenger{% else %}{{ channel.channel_type | capitalize }}{% endif %}
-                    </div>
-                    <div class="text-xs text-slate-500">ID: {{ channel.external_id or 'غير محدد' }}</div>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="px-2 py-1 rounded-lg text-xs {% if channel.is_active %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
-                    {{ 'نشط' if channel.is_active else 'معطل' }}
-                </span>
-                <form method="POST" action="/ui/channels/{{ channel.id }}/delete" class="inline">
-                    <input type="hidden" name="tenant_api_key" value="{{ tenant.api_key }}" />
-                    <button type="submit" onclick="return confirm('هل تريد حذف هذه القناة؟')" class="btn-danger">
-                        🗑️ حذف
-                    </button>
-                </form>
-            </div>
+  {% for channel in channels %}
+  <div
+    class="p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-600 transition"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center text-xl {% if channel.channel_type == 'telegram' %}bg-blue-500/20 text-blue-400 {% elif channel.channel_type == 'whatsapp' %}bg-green-500/20 text-green-400 {% elif channel.channel_type in ['messenger', 'meta'] %}bg-indigo-500/20 text-indigo-400 {% elif channel.channel_type == 'instagram' %}bg-pink-500/20 text-pink-400 {% else %}bg-slate-600/20 text-slate-400{% endif %}"
+        >
+          {% if channel.channel_type == 'telegram' %}🤖 {% elif
+          channel.channel_type == 'whatsapp' %}💬 {% elif channel.channel_type
+          in ['messenger', 'meta'] %}💙 {% elif channel.channel_type ==
+          'instagram' %}📸 {% else %}📱{% endif %}
         </div>
-        {% if channel.verify_token %}
-        <div class="mt-3 p-2 bg-slate-900/50 rounded-lg">
-            <div class="text-xs text-slate-500 mb-1">Verify Token (للربط مع المنصة):</div>
-            <code class="text-xs text-cyan-400 break-all">{{ channel.verify_token }}</code>
+        <div>
+          <div class="font-semibold text-slate-200">
+            {% if channel.channel_type in ['messenger', 'meta'] %}Messenger{%
+            else %}{{ channel.channel_type | capitalize }}{% endif %}
+          </div>
+          <div class="text-xs text-slate-500">
+            ID: {{ channel.external_id or 'غير محدد' }}
+          </div>
         </div>
-        {% endif %}
-
-        {% if channel.channel_type == 'telegram' and channel.verify_token %}
-        <div class="mt-3 p-3 bg-slate-900/50 rounded-lg">
-            <div class="text-xs text-slate-500 mb-2">Telegram Webhook URL:</div>
-            <code class="text-xs text-cyan-400 break-all" id="tgwh-{{ channel.id }}">{{ base_url }}/webhooks/telegram/{{ channel.verify_token }}</code>
-            <div class="mt-2 text-xs text-slate-500">شغّل (استبدل BOT_TOKEN بتوكن البوت من BotFather):</div>
-            <code class="text-xs text-slate-300 break-all">https://api.telegram.org/bot&lt;BOT_TOKEN&gt;/setWebhook?url={{ base_url }}/webhooks/telegram/{{ channel.verify_token }}</code>
-            <div class="mt-1 text-xs text-slate-500">للتحقق:</div>
-            <code class="text-xs text-slate-300 break-all">https://api.telegram.org/bot&lt;BOT_TOKEN&gt;/getWebhookInfo</code>
-        </div>
-        {% endif %}
+      </div>
+      <div class="flex items-center gap-3">
+        <span
+          class="px-2 py-1 rounded-lg text-xs {% if channel.is_active %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}"
+        >
+          {{ 'نشط' if channel.is_active else 'معطل' }}
+        </span>
+        <form
+          method="POST"
+          action="/ui/channels/{{ channel.id }}/delete"
+          class="inline"
+        >
+          <input
+            type="hidden"
+            name="tenant_api_key"
+            value="{{ tenant.api_key }}"
+          />
+          <button
+            type="submit"
+            onclick="return confirm('هل تريد حذف هذه القناة؟')"
+            class="btn-danger"
+          >
+            🗑️ حذف
+          </button>
+        </form>
+      </div>
     </div>
-    {% endfor %}
+    {% if channel.verify_token %}
+    <div class="mt-3 p-2 bg-slate-900/50 rounded-lg">
+      <div class="text-xs text-slate-500 mb-1">
+        Verify Token (للربط مع المنصة):
+      </div>
+      <code class="text-xs text-cyan-400 break-all"
+        >{{ channel.verify_token }}</code
+      >
+    </div>
+    {% endif %} {% if channel.channel_type == 'telegram' and
+    channel.verify_token %}
+    <div class="mt-3 p-3 bg-slate-900/50 rounded-lg">
+      <div class="text-xs text-slate-500 mb-2">Telegram Webhook URL:</div>
+      <code class="text-xs text-cyan-400 break-all" id="tgwh-{{ channel.id }}"
+        >{{ base_url }}/webhooks/telegram/{{ channel.verify_token }}</code
+      >
+      <div class="mt-2 text-xs text-slate-500">
+        شغّل (استبدل BOT_TOKEN بتوكن البوت من BotFather):
+      </div>
+      <code class="text-xs text-slate-300 break-all"
+        >https://api.telegram.org/bot&lt;BOT_TOKEN&gt;/setWebhook?url={{
+        base_url }}/webhooks/telegram/{{ channel.verify_token }}</code
+      >
+      <div class="mt-1 text-xs text-slate-500">للتحقق:</div>
+      <code class="text-xs text-slate-300 break-all"
+        >https://api.telegram.org/bot&lt;BOT_TOKEN&gt;/getWebhookInfo</code
+      >
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
 </div>
 {% else %}
 <div class="text-center py-8 text-slate-400">
-    <div class="text-4xl mb-3">📱</div>
-    <p>لا توجد قنوات متصلة</p>
-    <p class="text-sm mt-1">أضف أول قناة من النموذج الجانبي</p>
+  <div class="text-4xl mb-3">📱</div>
+  <p>لا توجد قنوات متصلة</p>
+  <p class="text-sm mt-1">أضف أول قناة من النموذج الجانبي</p>
 </div>
 {% endif %}

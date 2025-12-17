@@ -41,15 +41,13 @@ async def process_flow(
         context[variable_name] = user_message
         lead.flow_context = context
         session.add(lead)
-    
+
     # 2. Move to next node
     next_node_id = current_node.get("next")
     return await execute_flow_steps(session, lead, flow, next_node_id)
 
 
-async def start_flow(
-    session: AsyncSession, lead: Lead, flow: Flow
-) -> str | None:
+async def start_flow(session: AsyncSession, lead: Lead, flow: Flow) -> str | None:
     """
     Starts a flow for a lead.
     """
@@ -62,7 +60,7 @@ async def start_flow(
     nodes = flow.flow_data.get("nodes", [])
     if not nodes:
         return None
-    
+
     start_node = next((n for n in nodes if n.get("id") == "start"), nodes[0])
     return await execute_flow_steps(session, lead, flow, start_node["id"])
 
@@ -80,7 +78,7 @@ async def execute_flow_steps(
 
     nodes = flow.flow_data.get("nodes", [])
     node_map = {n["id"]: n for n in nodes}
-    
+
     current_id = start_node_id
     responses = []
 
@@ -94,7 +92,7 @@ async def execute_flow_steps(
         try:
             text = text_template.format(**lead.flow_context)
         except KeyError:
-            text = text_template # Fallback if var missing
+            text = text_template  # Fallback if var missing
 
         responses.append(text)
 
@@ -104,7 +102,7 @@ async def execute_flow_steps(
             session.add(lead)
             await session.commit()
             return "\n\n".join(responses)
-        
+
         # Move to next
         current_id = node.get("next")
 

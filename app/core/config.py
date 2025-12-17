@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     llm_api_key: str = Field(default="", validation_alias="LLM_API_KEY")
     llm_model: str = Field(
         # Default picked to be a common Groq model name; override via env.
-        default="llama-3.3-70b-versatile", validation_alias="LLM_MODEL"
+        default="llama-3.3-70b-versatile",
+        validation_alias="LLM_MODEL",
     )
 
     # Convenience alias requested: GROQ_API_KEY can be used instead of LLM_API_KEY
@@ -45,7 +46,7 @@ class Settings(BaseSettings):
 
     # Optional convenience aliases for model selection
     groq_model: str = Field(default="", validation_alias="GROQ_MODEL")
-    
+
     # NVIDIA NIM API support
     nvidia_api_key: str = Field(default="", validation_alias="NVIDIA_API_KEY")
 
@@ -57,17 +58,23 @@ class Settings(BaseSettings):
         default=5.0, validation_alias="WEBHOOK_TIMEOUT"
     )
 
-    # Email Settings
+    # Email Settings - Gmail SMTP Support
     smtp_host: str = Field(default="", validation_alias="SMTP_HOST")
     smtp_port: int = Field(default=587, validation_alias="SMTP_PORT")
     smtp_user: str = Field(default="", validation_alias="SMTP_USER")
     smtp_password: str = Field(default="", validation_alias="SMTP_PASSWORD")
     smtp_tls: bool = Field(default=True, validation_alias="SMTP_TLS")
-    
-    email_from: str = Field(default="noreply@robovai.com", validation_alias="EMAIL_FROM")
+    smtp_ssl: bool = Field(default=False, validation_alias="SMTP_SSL")
+
+    email_from: str = Field(
+        default="", validation_alias="EMAIL_FROM"
+    )
     email_from_name: str = Field(default="RoboVAI", validation_alias="EMAIL_FROM_NAME")
-    
+
     sendgrid_api_key: str = Field(default="", validation_alias="SENDGRID_API_KEY")
+    
+    # Base URL for email links (verification, password reset)
+    base_url: str = Field(default="http://localhost:8000", validation_alias="BASE_URL")
 
     def effective_llm_api_key(self) -> str:
         return self.llm_api_key or self.groq_api_key or self.nvidia_api_key

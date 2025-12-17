@@ -1,52 +1,71 @@
 {% if error %}
-<div class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm">
-    ⚠️ {{ error }}
+<div
+  class="p-4 bg-red-900/20 border border-red-700/50 rounded-xl text-red-300 text-sm"
+>
+  ⚠️ {{ error }}
 </div>
 {% elif leads %}
 <div class="overflow-x-auto">
-    <table class="w-full">
-        <thead>
-            <tr class="border-b border-slate-700">
-                <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">الاسم</th>
-                <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">القناة</th>
-                <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">المعرّف</th>
-                <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">البيانات</th>
-                <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">التاريخ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lead in leads %}
-            <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition">
-                <td class="py-3 px-4">
-                    <div class="font-medium text-slate-200">{{ lead.name or 'غير معروف' }}</div>
-                </td>
-                <td class="py-3 px-4">
-                    <span class="px-2 py-1 rounded text-xs
-                        {% if lead.channel == 'telegram' %}bg-blue-500/20 text-blue-400
-                        {% elif lead.channel == 'whatsapp' %}bg-green-500/20 text-green-400
-                        {% elif lead.channel == 'widget' %}bg-purple-500/20 text-purple-400
-                        {% else %}bg-slate-600/20 text-slate-400{% endif %}">
-                        {{ lead.channel }}
-                    </span>
-                </td>
-                <td class="py-3 px-4 text-sm text-slate-400 font-mono">{{ lead.external_id[:20] }}...</td>
-                <td class="py-3 px-4">
-                    {% if lead.metadata %}
-                    <span class="text-xs text-cyan-400">{{ lead.metadata | length }} حقل</span>
-                    {% else %}
-                    <span class="text-xs text-slate-500">-</span>
-                    {% endif %}
-                </td>
-                <td class="py-3 px-4 text-sm text-slate-500">{{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else '-' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-slate-700">
+        <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">
+          الاسم
+        </th>
+        <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">
+          القناة
+        </th>
+        <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">
+          المعرّف
+        </th>
+        <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">
+          البيانات
+        </th>
+        <th class="text-right py-3 px-4 text-sm font-semibold text-slate-300">
+          التاريخ
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lead in leads %}
+      <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition">
+        <td class="py-3 px-4">
+          <div class="font-medium text-slate-200">
+            {{ lead.name or 'غير معروف' }}
+          </div>
+        </td>
+        <td class="py-3 px-4">
+          <span
+            class="px-2 py-1 rounded text-xs {% if lead.channel == 'telegram' %}bg-blue-500/20 text-blue-400 {% elif lead.channel == 'whatsapp' %}bg-green-500/20 text-green-400 {% elif lead.channel == 'widget' %}bg-purple-500/20 text-purple-400 {% else %}bg-slate-600/20 text-slate-400{% endif %}"
+          >
+            {{ lead.channel }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-sm text-slate-400 font-mono">
+          {{ lead.external_id[:20] }}...
+        </td>
+        <td class="py-3 px-4">
+          {% if lead.metadata %}
+          <span class="text-xs text-cyan-400"
+            >{{ lead.metadata | length }} حقل</span
+          >
+          {% else %}
+          <span class="text-xs text-slate-500">-</span>
+          {% endif %}
+        </td>
+        <td class="py-3 px-4 text-sm text-slate-500">
+          {{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else
+          '-' }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% else %}
 <div class="text-center py-12 text-slate-400">
-    <div class="text-5xl mb-4">👤</div>
-    <p>لا يوجد عملاء محتملين بعد</p>
-    <p class="text-sm mt-1">سيظهر هنا بيانات العملاء التي يجمعها البوت</p>
+  <div class="text-5xl mb-4">👤</div>
+  <p>لا يوجد عملاء محتملين بعد</p>
+  <p class="text-sm mt-1">سيظهر هنا بيانات العملاء التي يجمعها البوت</p>
 </div>
 {% endif %}

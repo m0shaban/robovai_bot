@@ -56,19 +56,14 @@ async def get_chat_history_for_lead(
 
 
 async def get_inbox_conversations(
-    session: AsyncSession,
-    tenant_id: int,
-    limit: int = 50
+    session: AsyncSession, tenant_id: int, limit: int = 50
 ) -> list[tuple[Lead, ChatLog]]:
     """
     Returns a list of (Lead, latest_ChatLog) tuples, ordered by latest message.
     """
     # Subquery to find the latest timestamp for each lead
     subq = (
-        select(
-            ChatLog.lead_id,
-            func.max(ChatLog.timestamp).label("max_ts")
-        )
+        select(ChatLog.lead_id, func.max(ChatLog.timestamp).label("max_ts"))
         .group_by(ChatLog.lead_id)
         .subquery()
     )
@@ -77,11 +72,13 @@ async def get_inbox_conversations(
     stmt = (
         select(Lead, ChatLog)
         .join(subq, Lead.id == subq.c.lead_id)
-        .join(ChatLog, (ChatLog.lead_id == Lead.id) & (ChatLog.timestamp == subq.c.max_ts))
+        .join(
+            ChatLog, (ChatLog.lead_id == Lead.id) & (ChatLog.timestamp == subq.c.max_ts)
+        )
         .where(Lead.tenant_id == tenant_id)
         .order_by(desc(subq.c.max_ts))
         .limit(limit)
     )
-    
+
     result = await session.execute(stmt)
     return list(result.all())

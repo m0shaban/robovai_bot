@@ -27,9 +27,7 @@ async def create_broadcast(
     return obj
 
 
-async def list_broadcasts(
-    *, session: AsyncSession, tenant_id: int
-) -> list[Broadcast]:
+async def list_broadcasts(*, session: AsyncSession, tenant_id: int) -> list[Broadcast]:
     stmt = (
         select(Broadcast)
         .where(Broadcast.tenant_id == tenant_id)
@@ -39,23 +37,25 @@ async def list_broadcasts(
     return list(result.scalars().all())
 
 
-async def get_broadcast(
-    session: AsyncSession, broadcast_id: int
-) -> Broadcast | None:
+async def get_broadcast(session: AsyncSession, broadcast_id: int) -> Broadcast | None:
     return await session.get(Broadcast, broadcast_id)
 
 
 async def update_broadcast_stats(
-    session: AsyncSession, broadcast_id: int, sent: int = 0, failed: int = 0, status: BroadcastStatus | None = None
+    session: AsyncSession,
+    broadcast_id: int,
+    sent: int = 0,
+    failed: int = 0,
+    status: BroadcastStatus | None = None,
 ) -> None:
     obj = await session.get(Broadcast, broadcast_id)
     if not obj:
         return
-    
+
     obj.sent_count += sent
     obj.failed_count += failed
     if status:
         obj.status = status
-        
+
     session.add(obj)
     await session.commit()

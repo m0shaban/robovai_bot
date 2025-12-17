@@ -23,9 +23,11 @@ class Flow(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     trigger_keyword: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    
+
     # JSON structure: { "nodes": [...], "edges": [...] }
-    flow_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    flow_data: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
 
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
@@ -33,6 +35,4 @@ class Flow(Base):
 
     tenant = relationship("Tenant", back_populates="flows")
 
-    __table_args__ = (
-        Index("ix_flows_tenant_trigger", "tenant_id", "trigger_keyword"),
-    )
+    __table_args__ = (Index("ix_flows_tenant_trigger", "tenant_id", "trigger_keyword"),)

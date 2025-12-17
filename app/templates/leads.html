@@ -1,38 +1,45 @@
-{% extends "base.html" %}
-{% block title %}العملاء المحتملين - RoboVAI{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}العملاء المحتملين - RoboVAI{%
+endblock %} {% block content %}
 <div class="glass-card p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-50">👤 العملاء المحتملين (Leads)</h1>
-            <p class="text-slate-400 text-sm mt-1">بيانات العملاء التي جمعها البوت تلقائياً</p>
-        </div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-50">
+        👤 العملاء المحتملين (Leads)
+      </h1>
+      <p class="text-slate-400 text-sm mt-1">
+        بيانات العملاء التي جمعها البوت تلقائياً
+      </p>
     </div>
+  </div>
 
-    <div class="mb-6">
-        <label class="label">اختر المشروع</label>
-        <select id="tenant_select" class="select-field" onchange="loadLeads()">
-            <option value="">-- اختر مشروعاً --</option>
-            {% for tenant in tenants %}
-            <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+  <div class="mb-6">
+    <label class="label">اختر المشروع</label>
+    <select id="tenant_select" class="select-field" onchange="loadLeads()">
+      <option value="">-- اختر مشروعاً --</option>
+      {% for tenant in tenants %}
+      <option value="{{ tenant.api_key }}">{{ tenant.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <div id="lead-rows">
-        <div class="text-center py-12 text-slate-400">
-            <div class="text-5xl mb-4">👤</div>
-            <p>اختر مشروعاً لعرض العملاء المحتملين</p>
-        </div>
+  <div id="lead-rows">
+    <div class="text-center py-12 text-slate-400">
+      <div class="text-5xl mb-4">👤</div>
+      <p>اختر مشروعاً لعرض العملاء المحتملين</p>
     </div>
+  </div>
 </div>
 
 <script>
-function loadLeads() {
+  function loadLeads() {
     const apiKey = document.getElementById('tenant_select').value;
     if (apiKey) {
-        htmx.ajax('GET', '/ui/leads/rows?tenant_api_key=' + encodeURIComponent(apiKey), {target: '#lead-rows'});
+      htmx.ajax(
+        'GET',
+        '/ui/leads/rows?tenant_api_key=' + encodeURIComponent(apiKey),
+        { target: '#lead-rows' }
+      );
     }
-}
+  }
 </script>
 {% endblock %}

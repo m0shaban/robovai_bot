@@ -1,149 +1,231 @@
-{% extends "base.html" %}
-
-{% block title %}مرحباً - RoboVAI{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}مرحباً - RoboVAI{% endblock %} {%
+block content %}
 <div class="max-w-6xl mx-auto fade-in">
-    <!-- Hero Section -->
-    <div class="text-center mb-12">
-        <img src="/static/img/logo.png" alt="Logo" class="w-32 h-32 rounded-full mx-auto mb-6 shadow-2xl shadow-cyan-500/20">
-        <h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4">
-            مرحباً بك في RoboVAI
-        </h1>
-        <p class="text-2xl text-slate-300 mb-3">منصة الذكاء الاصطناعي للمحادثات التفاعلية</p>
-        <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-            أتمتة خدمة العملاء وزيادة المبيعات من خلال شات بوت ذكي يعمل 24/7 على جميع القنوات
-        </p>
+  <!-- Hero Section -->
+  <div class="text-center mb-12">
+    <img
+      src="/static/img/logo.png"
+      alt="Logo"
+      class="w-32 h-32 rounded-full mx-auto mb-6 shadow-2xl shadow-cyan-500/20"
+    />
+    <h1
+      class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4"
+    >
+      مرحباً بك في RoboVAI
+    </h1>
+    <p class="text-2xl text-slate-300 mb-3">
+      منصة الذكاء الاصطناعي للمحادثات التفاعلية
+    </p>
+    <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+      أتمتة خدمة العملاء وزيادة المبيعات من خلال شات بوت ذكي يعمل 24/7 على جميع
+      القنوات
+    </p>
+  </div>
+
+  <!-- Features Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div
+      class="bg-gradient-to-br from-cyan-900/30 to-cyan-900/10 border border-cyan-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300"
+    >
+      <div class="text-4xl mb-4">⚡</div>
+      <h3 class="text-xl font-bold text-cyan-300 mb-2">سرعة فائقة</h3>
+      <p class="text-slate-400 text-sm">
+        استجابة فورية للعملاء دون أي انتظار، متاح 24/7 بدون توقف
+      </p>
     </div>
 
-    <!-- Features Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div class="bg-gradient-to-br from-cyan-900/30 to-cyan-900/10 border border-cyan-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
-            <div class="text-4xl mb-4">⚡</div>
-            <h3 class="text-xl font-bold text-cyan-300 mb-2">سرعة فائقة</h3>
-            <p class="text-slate-400 text-sm">استجابة فورية للعملاء دون أي انتظار، متاح 24/7 بدون توقف</p>
-        </div>
-        
-        <div class="bg-gradient-to-br from-indigo-900/30 to-indigo-900/10 border border-indigo-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
-            <div class="text-4xl mb-4">🧠</div>
-            <h3 class="text-xl font-bold text-indigo-300 mb-2">ذكاء متقدم</h3>
-            <p class="text-slate-400 text-sm">يفهم أسئلة العملاء ويجيب بذكاء باستخدام أحدث تقنيات الذكاء الاصطناعي</p>
-        </div>
-        
-        <div class="bg-gradient-to-br from-purple-900/30 to-purple-900/10 border border-purple-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
-            <div class="text-4xl mb-4">💰</div>
-            <h3 class="text-xl font-bold text-purple-300 mb-2">توفير التكاليف</h3>
-            <p class="text-slate-400 text-sm">وفّر حتى 80% من تكاليف خدمة العملاء مع زيادة الكفاءة</p>
-        </div>
+    <div
+      class="bg-gradient-to-br from-indigo-900/30 to-indigo-900/10 border border-indigo-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300"
+    >
+      <div class="text-4xl mb-4">🧠</div>
+      <h3 class="text-xl font-bold text-indigo-300 mb-2">ذكاء متقدم</h3>
+      <p class="text-slate-400 text-sm">
+        يفهم أسئلة العملاء ويجيب بذكاء باستخدام أحدث تقنيات الذكاء الاصطناعي
+      </p>
     </div>
 
-    <!-- How It Works -->
-    <div class="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700 rounded-2xl p-8 mb-12">
-        <h2 class="text-3xl font-bold text-center text-slate-50 mb-8">🚀 ابدأ في 3 خطوات بسيطة</h2>
-        
-        <div class="space-y-6">
-            <!-- Step 1 -->
-            <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    1
-                </div>
-                <div class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <h3 class="text-xl font-bold text-cyan-300 mb-2">أنشئ مشروعك الأول</h3>
-                    <p class="text-slate-400 mb-3">كل مشروع منفصل بإعداداته وبياناته الخاصة</p>
-                    <a href="/ui/tenants" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 text-sm font-semibold">
-                        انشئ مشروعك الآن ←
-                    </a>
-                </div>
-            </div>
+    <div
+      class="bg-gradient-to-br from-purple-900/30 to-purple-900/10 border border-purple-700/50 rounded-2xl p-6 hover:scale-105 transition-transform duration-300"
+    >
+      <div class="text-4xl mb-4">💰</div>
+      <h3 class="text-xl font-bold text-purple-300 mb-2">توفير التكاليف</h3>
+      <p class="text-slate-400 text-sm">
+        وفّر حتى 80% من تكاليف خدمة العملاء مع زيادة الكفاءة
+      </p>
+    </div>
+  </div>
 
-            <!-- Step 2 -->
-            <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    2
-                </div>
-                <div class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <h3 class="text-xl font-bold text-indigo-300 mb-2">اربط قنوات التواصل</h3>
-                    <p class="text-slate-400">
-                        📱 تيليجرام • 💬 واتساب • 💙 ماسنجر • 📸 إنستجرام<br>
-                        <span class="text-sm">كل قنواتك في مكان واحد</span>
-                    </p>
-                </div>
-            </div>
+  <!-- How It Works -->
+  <div
+    class="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700 rounded-2xl p-8 mb-12"
+  >
+    <h2 class="text-3xl font-bold text-center text-slate-50 mb-8">
+      🚀 ابدأ في 3 خطوات بسيطة
+    </h2>
 
-            <!-- Step 3 -->
-            <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    3
-                </div>
-                <div class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <h3 class="text-xl font-bold text-purple-300 mb-2">خصص وأطلق البوت</h3>
-                    <p class="text-slate-400">
-                        حدد شخصية البوت، أضف ردوداً جاهزة، واجعله يتحدث بأسلوبك<br>
-                        <span class="text-sm">⚙️ إعدادات مرنة • 🎯 ردود ذكية • 📊 تقارير مفصلة</span>
-                    </p>
-                </div>
-            </div>
+    <div class="space-y-6">
+      <!-- Step 1 -->
+      <div class="flex items-start gap-4">
+        <div
+          class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
+        >
+          1
         </div>
+        <div
+          class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700"
+        >
+          <h3 class="text-xl font-bold text-cyan-300 mb-2">
+            أنشئ مشروعك الأول
+          </h3>
+          <p class="text-slate-400 mb-3">
+            كل مشروع منفصل بإعداداته وبياناته الخاصة
+          </p>
+          <a
+            href="/ui/tenants"
+            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 text-sm font-semibold"
+          >
+            انشئ مشروعك الآن ←
+          </a>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flex items-start gap-4">
+        <div
+          class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
+        >
+          2
+        </div>
+        <div
+          class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700"
+        >
+          <h3 class="text-xl font-bold text-indigo-300 mb-2">
+            اربط قنوات التواصل
+          </h3>
+          <p class="text-slate-400">
+            📱 تيليجرام • 💬 واتساب • 💙 ماسنجر • 📸 إنستجرام<br />
+            <span class="text-sm">كل قنواتك في مكان واحد</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flex items-start gap-4">
+        <div
+          class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
+        >
+          3
+        </div>
+        <div
+          class="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700"
+        >
+          <h3 class="text-xl font-bold text-purple-300 mb-2">
+            خصص وأطلق البوت
+          </h3>
+          <p class="text-slate-400">
+            حدد شخصية البوت، أضف ردوداً جاهزة، واجعله يتحدث بأسلوبك<br />
+            <span class="text-sm"
+              >⚙️ إعدادات مرنة • 🎯 ردود ذكية • 📊 تقارير مفصلة</span
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Benefits Section -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <div class="glass-card p-6">
+      <h3 class="text-xl font-bold text-slate-50 mb-4">✨ لماذا RoboVAI؟</h3>
+      <ul class="space-y-3 text-slate-300">
+        <li class="flex items-start gap-2">
+          <span class="text-green-400">✓</span>
+          <span
+            ><strong>لا حاجة للبرمجة:</strong> واجهة سهلة بدون كود معقد</span
+          >
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-400">✓</span>
+          <span
+            ><strong>تعدد اللغات:</strong> يفهم ويرد بالعربية والإنجليزية</span
+          >
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-400">✓</span>
+          <span><strong>ويدجت جاهز:</strong> أضفه لموقعك في دقيقة واحدة</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-400">✓</span>
+          <span><strong>أمان عالي:</strong> بياناتك محمية ومشفرة</span>
+        </li>
+      </ul>
     </div>
 
-    <!-- Benefits Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <div class="glass-card p-6">
-            <h3 class="text-xl font-bold text-slate-50 mb-4">✨ لماذا RoboVAI؟</h3>
-            <ul class="space-y-3 text-slate-300">
-                <li class="flex items-start gap-2">
-                    <span class="text-green-400">✓</span>
-                    <span><strong>لا حاجة للبرمجة:</strong> واجهة سهلة بدون كود معقد</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-green-400">✓</span>
-                    <span><strong>تعدد اللغات:</strong> يفهم ويرد بالعربية والإنجليزية</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-green-400">✓</span>
-                    <span><strong>ويدجت جاهز:</strong> أضفه لموقعك في دقيقة واحدة</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-green-400">✓</span>
-                    <span><strong>أمان عالي:</strong> بياناتك محمية ومشفرة</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="glass-card p-6">
-            <h3 class="text-xl font-bold text-slate-50 mb-4">📈 النتائج المتوقعة</h3>
-            <ul class="space-y-3 text-slate-300">
-                <li class="flex items-start gap-2">
-                    <span class="text-cyan-400">📊</span>
-                    <span>زيادة رضا العملاء بنسبة <strong class="text-cyan-300">95%</strong></span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-indigo-400">⏱️</span>
-                    <span>تقليل وقت الاستجابة من ساعات إلى <strong class="text-indigo-300">ثوانٍ</strong></span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-purple-400">💵</span>
-                    <span>توفير <strong class="text-purple-300">80%</strong> من تكاليف الدعم</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="text-green-400">🎯</span>
-                    <span>معالجة <strong class="text-green-300">1000+</strong> محادثة يومياً</span>
-                </li>
-            </ul>
-        </div>
+    <div class="glass-card p-6">
+      <h3 class="text-xl font-bold text-slate-50 mb-4">📈 النتائج المتوقعة</h3>
+      <ul class="space-y-3 text-slate-300">
+        <li class="flex items-start gap-2">
+          <span class="text-cyan-400">📊</span>
+          <span
+            >زيادة رضا العملاء بنسبة
+            <strong class="text-cyan-300">95%</strong></span
+          >
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-indigo-400">⏱️</span>
+          <span
+            >تقليل وقت الاستجابة من ساعات إلى
+            <strong class="text-indigo-300">ثوانٍ</strong></span
+          >
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-purple-400">💵</span>
+          <span
+            >توفير <strong class="text-purple-300">80%</strong> من تكاليف
+            الدعم</span
+          >
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-400">🎯</span>
+          <span
+            >معالجة <strong class="text-green-300">1000+</strong> محادثة
+            يومياً</span
+          >
+        </li>
+      </ul>
     </div>
+  </div>
 
-    <!-- CTA -->
-    <div class="text-center bg-gradient-to-r from-cyan-900/40 to-indigo-900/40 border-2 border-cyan-500/50 rounded-2xl p-8">
-        <h2 class="text-3xl font-bold text-slate-50 mb-3">جاهز للبدء؟ 🚀</h2>
-        <p class="text-lg text-slate-300 mb-6">أنشئ أول شات بوت ذكي لك الآن وابدأ في تحسين تجربة عملائك</p>
-        <a href="/ui/tenants" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white text-xl font-bold rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
-            ابدأ الآن مجاناً
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-            </svg>
-        </a>
-        <p class="text-sm text-slate-400 mt-4">بدون بطاقة ائتمان • إعداد في دقائق</p>
-    </div>
+  <!-- CTA -->
+  <div
+    class="text-center bg-gradient-to-r from-cyan-900/40 to-indigo-900/40 border-2 border-cyan-500/50 rounded-2xl p-8"
+  >
+    <h2 class="text-3xl font-bold text-slate-50 mb-3">جاهز للبدء؟ 🚀</h2>
+    <p class="text-lg text-slate-300 mb-6">
+      أنشئ أول شات بوت ذكي لك الآن وابدأ في تحسين تجربة عملائك
+    </p>
+    <a
+      href="/ui/tenants"
+      class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white text-xl font-bold rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
+    >
+      ابدأ الآن مجاناً
+      <svg
+        class="w-6 h-6 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 7l5 5m0 0l-5 5m5-5H6"
+        ></path>
+      </svg>
+    </a>
+    <p class="text-sm text-slate-400 mt-4">
+      بدون بطاقة ائتمان • إعداد في دقائق
+    </p>
+  </div>
 </div>
 {% endblock %}

@@ -70,6 +70,7 @@
 ## Data Flow Examples
 
 ### 1. User Opens Dashboard (HTMX)
+
 ```
 Browser
   │
@@ -92,6 +93,7 @@ Browser (displays HTML)
 ```
 
 ### 2. Webhook from Telegram
+
 ```
 Telegram Bot API
   │
@@ -124,6 +126,7 @@ Send Response via Telegram API
 ```
 
 ### 3. Create Quick Reply (HTMX)
+
 ```
 Browser (clicks "Add Quick Reply")
   │
@@ -150,6 +153,7 @@ Browser (HTMX swaps in new row - NO page reload!)
 ## Technology Stack Details
 
 ### Backend
+
 - **FastAPI** (v0.110+) - Modern async web framework
 - **Uvicorn** - ASGI server (production-ready)
 - **SQLAlchemy 2.0** - ORM with async support
@@ -158,18 +162,21 @@ Browser (HTMX swaps in new row - NO page reload!)
 - **Pydantic** - Data validation
 
 ### Frontend
+
 - **Jinja2** - Server-side templating
 - **HTMX 1.9.12** - Partial page updates via HTML
 - **Tailwind CSS** - Utility-first styling (CDN)
 - **No JavaScript frameworks** - Just HTMX + vanilla JS
 
 ### AI/LLM
+
 - **Groq** (default) - Fast inference
 - **OpenAI** - GPT models
 - **Azure OpenAI** - Enterprise GPT
 - **Anthropic** - Claude models
 
 ### Deployment
+
 - **Render** - PaaS with free tier
 - **PostgreSQL** - Managed database
 - **Git** - Source control + CI/CD trigger
@@ -236,32 +243,37 @@ robovai-bot/
 ## Port & URL Map
 
 ### Local Development
-| Service | URL | Purpose |
-|---------|-----|---------|
-| Dashboard | http://localhost:8000/ui | HTMX admin interface |
-| API Docs | http://localhost:8000/docs | Interactive API explorer |
-| Health Check | http://localhost:8000/health | Status endpoint |
-| Tenant API | http://localhost:8000/api/v1/* | REST API (needs API key) |
-| Webhooks | http://localhost:8000/webhooks/* | Channel callbacks |
+
+| Service      | URL                               | Purpose                  |
+| ------------ | --------------------------------- | ------------------------ |
+| Dashboard    | http://localhost:8000/ui          | HTMX admin interface     |
+| API Docs     | http://localhost:8000/docs        | Interactive API explorer |
+| Health Check | http://localhost:8000/health      | Status endpoint          |
+| Tenant API   | http://localhost:8000/api/v1/\*   | REST API (needs API key) |
+| Webhooks     | http://localhost:8000/webhooks/\* | Channel callbacks        |
 
 ### Production (Render)
-| Service | URL | Purpose |
-|---------|-----|---------|
-| Dashboard | https://your-app.onrender.com/ui | Admin interface |
-| Webhook (Telegram) | https://your-app.onrender.com/webhooks/telegram/{tenant_id} | Bot callback |
-| Webhook (Meta) | https://your-app.onrender.com/webhooks/meta | WhatsApp/Messenger |
-| API | https://your-app.onrender.com/api/v1/* | REST endpoints |
+
+| Service            | URL                                                         | Purpose            |
+| ------------------ | ----------------------------------------------------------- | ------------------ |
+| Dashboard          | https://your-app.onrender.com/ui                            | Admin interface    |
+| Webhook (Telegram) | https://your-app.onrender.com/webhooks/telegram/{tenant_id} | Bot callback       |
+| Webhook (Meta)     | https://your-app.onrender.com/webhooks/meta                 | WhatsApp/Messenger |
+| API                | https://your-app.onrender.com/api/v1/*                      | REST endpoints     |
 
 ---
 
 ## Security Architecture
 
 ### Authentication Layers
+
 1. **Admin Operations** (Tenants page):
+
    - Protected by `ADMIN_PASSWORD` env var
    - Required for tenant create/delete/update
 
 2. **Tenant Operations** (All other pages):
+
    - Protected by tenant API key
    - Each tenant has unique key
    - Keys can be rotated
@@ -271,6 +283,7 @@ robovai-bot/
    - Meta: Uses verify_token for challenge handshake
 
 ### Data Isolation
+
 - Each tenant has isolated:
   - Channel integrations
   - Quick replies
@@ -280,6 +293,7 @@ robovai-bot/
   - Settings
 
 ### Environment Secrets
+
 - Never commit `.env` to git
 - Use Render environment variables UI
 - Rotate API keys regularly
@@ -289,21 +303,25 @@ robovai-bot/
 ## Performance Considerations
 
 ### Database Optimization
+
 - Indexes on `tenant_id`, `created_at`
 - Connection pooling via asyncpg
 - Lazy loading for relationships
 
 ### API Response Times
+
 - Target: < 200ms for HTMX swaps
 - Target: < 1s for AI responses
 - Use async/await throughout
 
 ### Scalability
+
 - Horizontal: Add more Render instances
 - Vertical: Upgrade Render plan
 - Database: Upgrade PostgreSQL plan
 
 ### Monitoring
+
 - Render provides built-in logs
 - Add custom logging for:
   - Failed webhook deliveries
@@ -340,6 +358,7 @@ Users access https://your-app.onrender.com
 ```
 
 ### Automatic Updates
+
 - Push to `main` branch → Auto-redeploy
 - Zero-downtime deployments
 - Rollback available in Render UI
@@ -349,34 +368,41 @@ Users access https://your-app.onrender.com
 ## HTMX Magic Explained
 
 Traditional web apps:
+
 ```
 User clicks button → Full page reload → Server sends entire HTML → Browser repaints everything
 ```
 
 HTMX approach:
+
 ```
 User clicks button → AJAX request → Server sends only changed HTML → HTMX swaps specific part
 ```
 
 ### Example: Adding a Quick Reply
+
 ```html
 <!-- Button with HTMX attributes -->
-<button 
+<button
   hx-post="/ui/quick-replies"
   hx-target="#quick-replies-table"
-  hx-swap="afterbegin">
+  hx-swap="afterbegin"
+>
   Add Quick Reply
 </button>
 
 <!-- HTMX does: -->
-1. Intercept button click
-2. POST form data to /ui/quick-replies
-3. Server returns <tr>...</tr> (just the new row!)
-4. HTMX inserts it at top of table
-5. NO FULL PAGE RELOAD! ⚡
+1. Intercept button click 2. POST form data to /ui/quick-replies 3. Server
+returns
+<tr>
+  ...
+</tr>
+(just the new row!) 4. HTMX inserts it at top of table 5. NO FULL PAGE RELOAD!
+⚡
 ```
 
 Benefits:
+
 - Faster (only sends HTML diff)
 - Simpler (no JSON parsing, no React/Vue)
 - SEO-friendly (still server-rendered)

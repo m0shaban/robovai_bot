@@ -196,6 +196,7 @@ async def send_page_message_text(
 
 # ============ INSTAGRAM MESSAGING ============
 
+
 async def send_instagram_message(
     *,
     access_token: str,
@@ -205,14 +206,14 @@ async def send_instagram_message(
     quick_replies: list[dict[str, str]] | None = None,
 ) -> None:
     """Send a message via Instagram Graph API.
-    
+
     Instagram uses the same Graph API as Messenger but with different endpoints.
     """
     if not access_token or not recipient_id:
         return
 
     url = f"https://graph.facebook.com/v21.0/{instagram_user_id}/messages"
-    
+
     payload: dict[str, Any] = {
         "recipient": {"id": recipient_id},
         "message": {"text": text},

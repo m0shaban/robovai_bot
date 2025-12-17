@@ -142,7 +142,9 @@ async def trigger_external_webhook(
         return
 
 
-async def detect_and_save_lead(*, tenant_id: int, user_message: str, sender_id: str | None = None) -> None:
+async def detect_and_save_lead(
+    *, tenant_id: int, user_message: str, sender_id: str | None = None
+) -> None:
     # Regex-first extraction for speed.
     info = extract_lead_info(user_message)
 
