@@ -7,9 +7,9 @@ databases:
 services:
   - type: web
     name: robovai-backend
-    env: python
+    runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -20,11 +20,20 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
-        value: '3.11.0'
+        value: 3.11.0
       - key: CORS_ALLOW_ORIGINS
         value: '*'
       - key: LLM_MODEL
         value: llama-3.1-70b-versatile
+      - key: ENVIRONMENT
+        value: production
       # Add these manually in Render dashboard:
       # - ADMIN_PASSWORD (required for tenant management)
       # - GROQ_API_KEY (required for AI features)
+      # - SMTP_HOST (e.g., smtp.gmail.com)
+      # - SMTP_PORT (e.g., 587)
+      # - SMTP_USER (your Gmail address)
+      # - SMTP_PASSWORD (Gmail App Password)
+      # - SMTP_TLS (set to true)
+      # - EMAIL_FROM (your Gmail address)
+      # - BASE_URL (your Render app URL, e.g., https://robovai-backend.onrender.com)
